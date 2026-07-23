@@ -1,0 +1,17 @@
+__pycache__
+.pytest_cache
+.git
+.gitignore
+.env
+.venv
+node_modules
+dist
+build
+*.pyc
+*.pyo
+*.egg-info
+.DS_Store
+.coverage
+htmlcov
+.terraform
+*.tfstate
