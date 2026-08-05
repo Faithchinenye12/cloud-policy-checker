@@ -1,12 +1,25 @@
-﻿from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+﻿from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
-async def get_db():
-    """Dependency for getting database session"""
-    # Will be implemented in Week 2
-    pass
+from config import settings
 
-async def get_current_user(token: str = Depends(None)):
-    """Dependency for getting current authenticated user"""
-    # Will be implemented in Week 2
-    pass
+
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
+
+
+def get_db():
+    """Create one database session for each API request."""
+    db: Session = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
