@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.auth.router import router as auth_router
+from backend.app.policies.router import router as policy_router
 from config import settings
 
 
@@ -47,3 +48,4 @@ def health_check() -> dict:
 
 
 app.include_router(auth_router)
+app.include_router(policy_router)

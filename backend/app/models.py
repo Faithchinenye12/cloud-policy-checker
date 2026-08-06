@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
+from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+
+
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = "users"
@@ -14,12 +17,14 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
 class Organization(Base):
     __tablename__ = "organizations"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
 
 class Resource(Base):
     __tablename__ = "resources"
@@ -32,6 +37,7 @@ class Resource(Base):
     organization_id = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
 class Policy(Base):
     __tablename__ = "policies"
 
@@ -39,7 +45,13 @@ class Policy(Base):
     name = Column(String, index=True)
     description = Column(Text)
     severity = Column(String)
+    cloud_provider = Column(String, nullable=False, default="aws", index=True)
+    resource_type = Column(String, nullable=False, default="storage_bucket", index=True)
+    rule_type = Column(String, nullable=False, index=True)
+    rule_config = Column(JSON, nullable=False, default=dict)
+    is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
 
 class Scan(Base):
     __tablename__ = "scans"
@@ -49,6 +61,7 @@ class Scan(Base):
     status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+
 
 class ComplianceResult(Base):
     __tablename__ = "compliance_results"
