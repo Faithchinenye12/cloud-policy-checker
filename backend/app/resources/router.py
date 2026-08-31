@@ -33,6 +33,27 @@ def get_resource_or_404(
     return resource
 
 
+def validate_organization(
+    organization_id: Optional[int],
+    db: Session,
+) -> None:
+    """Confirm an optional organization ID exists."""
+    if organization_id is None:
+        return
+
+    organization_exists = (
+        db.query(models.Organization.id)
+        .filter(models.Organization.id == organization_id)
+        .first()
+    )
+
+    if organization_exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found.",
+        )
+
+
 @router.post(
     "",
     response_model=schemas.Resource,
@@ -45,6 +66,11 @@ def create_resource(
 ) -> models.Resource:
     """Create a cloud-resource inventory record."""
     _ = current_user
+
+    validate_organization(
+        resource_data.organization_id,
+        db,
+    )
 
     existing_resource = (
         db.query(models.Resource)
@@ -67,7 +93,7 @@ def create_resource(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A resource with this cloud_id already exists.",
+            detail="The resource could not be created.",
         ) from exc
 
     db.refresh(resource)

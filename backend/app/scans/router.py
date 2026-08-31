@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.app import models, schemas
@@ -33,6 +34,27 @@ def get_scan_or_404(
     return scan
 
 
+def validate_organization(
+    organization_id: Optional[int],
+    db: Session,
+) -> None:
+    """Confirm an optional organization ID exists."""
+    if organization_id is None:
+        return
+
+    organization_exists = (
+        db.query(models.Organization.id)
+        .filter(models.Organization.id == organization_id)
+        .first()
+    )
+
+    if organization_exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found.",
+        )
+
+
 @router.post(
     "",
     response_model=schemas.Scan,
@@ -44,6 +66,11 @@ def create_scan(
     current_user: models.User = Depends(get_current_user),
 ) -> models.Scan:
     """Create a pending local compliance scan request."""
+    validate_organization(
+        scan_data.organization_id,
+        db,
+    )
+
     scan = models.Scan(
         **scan_data.model_dump(),
         requested_by_user_id=current_user.id,
@@ -51,9 +78,17 @@ def create_scan(
     )
 
     db.add(scan)
-    db.commit()
-    db.refresh(scan)
 
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The scan could not be created.",
+        ) from exc
+
+    db.refresh(scan)
     return scan
 
 
