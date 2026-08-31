@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
+import AuthPage, { type AuthUser } from "./AuthPage";
 import {
   Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu,
@@ -30,6 +31,8 @@ const scans = [
 export default function App() {
   const [apiState, setApiState] = useState<ApiState>("checking");
   const [mobileNav, setMobileNav] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -41,12 +44,36 @@ export default function App() {
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("cpc_access_token");
+    if (!token) { setAuthChecked(true); return; }
+    fetch(`${import.meta.env.VITE_API_URL ?? "/api"}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => { if (!response.ok) throw new Error(); return response.json(); })
+      .then(setUser)
+      .catch(() => localStorage.removeItem("cpc_access_token"))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  function authenticated(token: string, currentUser: AuthUser) {
+    localStorage.setItem("cpc_access_token", token);
+    setUser(currentUser);
+    setAuthChecked(true);
+  }
+
+  function logout() {
+    localStorage.removeItem("cpc_access_token");
+    setUser(null);
+  }
+
+  if (!authChecked) return <main className="auth-loading"><ShieldCheck /><span>Securing your workspace…</span></main>;
+  if (!user) return <AuthPage onAuthenticated={authenticated} />;
+
   return <div className="app-shell">
     <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
       <div className="brand-row"><div className="brand-icon"><ShieldCheck /></div><div><strong>Cloud Policy</strong><span>Checker</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X /></button></div>
       <div className="workspace-card"><span className="eyebrow">Workspace</span><button><Cloud /> Production Cloud <ChevronDown /></button></div>
       <nav><span className="nav-heading">Security posture</span>{navigation.map(({ label, icon: Icon, active }) => <a className={active ? "active" : ""} href={`#${label.toLowerCase()}`} key={label}><Icon />{label}{label === "Findings" && <span className="nav-count">12</span>}</a>)}</nav>
-      <div className="sidebar-footer"><a href="#settings"><Settings /> Settings</a><div className="user-card"><CircleUserRound /><div><strong>Security Admin</strong><span>Portfolio workspace</span></div></div></div>
+      <div className="sidebar-footer"><a href="#settings"><Settings /> Settings</a><button className="user-card" onClick={logout} title="Sign out"><CircleUserRound /><div><strong>{user.username}</strong><span>Sign out</span></div></button></div>
     </aside>
     {mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} />}
 
