@@ -138,6 +138,7 @@ class Scan(Base):
     )
     cloud_provider = Column(String, nullable=False, index=True)
     resource_type = Column(String, nullable=True, index=True)
+    job_id = Column(String, nullable=True, unique=True, index=True)
     status = Column(String, nullable=False, default="pending", index=True)
     total_resources = Column(Integer, nullable=False, default=0)
     compliant_count = Column(Integer, nullable=False, default=0)

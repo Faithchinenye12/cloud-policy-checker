@@ -1,5 +1,5 @@
-from datetime import datetime
 from typing import Optional
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from backend.app import models, schemas
 from backend.app.auth.router import get_current_user
 from backend.app.dependencies import get_db
-from backend.app.policies.engine import evaluate_policy
+from backend.app.tasks import run_scan_task
 
 
 router = APIRouter(prefix="/scans", tags=["Scans"])
@@ -65,7 +65,7 @@ def create_scan(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ) -> models.Scan:
-    """Create a pending local compliance scan request."""
+    """Create a pending compliance scan request."""
     validate_organization(
         scan_data.organization_id,
         db,
@@ -120,30 +120,41 @@ def get_scan(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ) -> models.Scan:
-    """Return one scan and its current lifecycle status."""
+    """Return one scan and its background-processing status."""
     _ = current_user
     return get_scan_or_404(scan_id, db)
 
 
-@router.post("/{scan_id}/run", response_model=schemas.Scan)
-def run_scan(
+@router.post(
+    "/{scan_id}/run",
+    response_model=schemas.Scan,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def queue_scan(
     scan_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ) -> models.Scan:
-    """
-    Run a deterministic local scan against stored resource configuration.
-
-    This is intentionally synchronous for the Day 6 foundation. A future
-    worker will move this processing into a Redis-backed background job.
-    """
+    """Queue a scan for deterministic background processing."""
     _ = current_user
-    scan = get_scan_or_404(scan_id, db)
 
-    if scan.status == "running":
+    scan = (
+        db.query(models.Scan)
+        .filter(models.Scan.id == scan_id)
+        .with_for_update()
+        .first()
+    )
+
+    if scan is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scan not found.",
+        )
+
+    if scan.status in {"queued", "running"}:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="This scan is already running.",
+            detail="This scan is already queued or running.",
         )
 
     if scan.status == "completed":
@@ -152,98 +163,34 @@ def run_scan(
             detail="This scan has already completed.",
         )
 
-    scan.status = "running"
-    scan.started_at = datetime.utcnow()
-    scan.completed_at = None
+    previous_status = scan.status
+    job_id = str(uuid4())
+
+    scan.job_id = job_id
+    scan.status = "queued"
     scan.error_message = None
-    scan.total_resources = 0
-    scan.compliant_count = 0
-    scan.non_compliant_count = 0
     db.commit()
 
     try:
-        resource_query = db.query(models.Resource).filter(
-            models.Resource.status == "active",
-            models.Resource.cloud_provider == scan.cloud_provider,
+        run_scan_task.apply_async(
+            args=[scan.id],
+            task_id=job_id,
         )
-
-        if scan.organization_id is not None:
-            resource_query = resource_query.filter(
-                models.Resource.organization_id == scan.organization_id
-            )
-
-        if scan.resource_type is not None:
-            resource_query = resource_query.filter(
-                models.Resource.resource_type == scan.resource_type
-            )
-
-        resources = resource_query.all()
-
-        existing_results = db.query(models.ComplianceResult).filter(
-            models.ComplianceResult.scan_id == scan.id
-        )
-        existing_results.delete(synchronize_session=False)
-
-        compliant_resources = 0
-        non_compliant_resources = 0
-
-        for resource in resources:
-            policies = db.query(models.Policy).filter(
-                models.Policy.is_active.is_(True),
-                models.Policy.cloud_provider == resource.cloud_provider,
-                models.Policy.resource_type == resource.resource_type,
-            ).all()
-
-            evaluations = [
-                evaluate_policy(policy, resource.configuration)
-                for policy in policies
-            ]
-
-            for evaluation in evaluations:
-                compliance_result = models.ComplianceResult(
-                    scan_id=scan.id,
-                    resource_id=resource.id,
-                    policy_id=evaluation.policy_id,
-                    compliant=evaluation.compliant,
-                    details=evaluation.details,
-                )
-                db.add(compliance_result)
-
-            if evaluations:
-                if all(
-                    evaluation.compliant
-                    for evaluation in evaluations
-                ):
-                    compliant_resources += 1
-                else:
-                    non_compliant_resources += 1
-
-        scan.total_resources = len(resources)
-        scan.compliant_count = compliant_resources
-        scan.non_compliant_count = non_compliant_resources
-        scan.status = "completed"
-        scan.completed_at = datetime.utcnow()
-
-        db.commit()
-        db.refresh(scan)
-
-        return scan
-
     except Exception as exc:
-        db.rollback()
-
-        failed_scan = get_scan_or_404(scan_id, db)
-        failed_scan.status = "failed"
-        failed_scan.completed_at = datetime.utcnow()
-        failed_scan.error_message = (
-            "The local scan could not be completed."
+        scan.status = previous_status
+        scan.job_id = None
+        scan.error_message = (
+            "The scan could not be added to the background queue."
         )
         db.commit()
 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="The local scan could not be completed.",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The background scan queue is unavailable.",
         ) from exc
+
+    db.refresh(scan)
+    return scan
 
 
 @router.get(

@@ -6,7 +6,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 CloudProvider = Literal["aws", "azure", "gcp"]
 ResourceStatus = Literal["active", "inactive"]
-ScanStatus = Literal["pending", "running", "completed", "failed"]
+ScanStatus = Literal[
+    "pending",
+    "queued",
+    "running",
+    "completed",
+    "failed",
+]
 
 
 class UserBase(BaseModel):
@@ -154,6 +160,7 @@ class Scan(BaseModel):
     requested_by_user_id: Optional[int]
     cloud_provider: CloudProvider
     resource_type: Optional[str]
+    job_id: Optional[str]
     status: ScanStatus
     total_resources: int
     compliant_count: int
