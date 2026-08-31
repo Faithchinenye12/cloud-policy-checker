@@ -3,13 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.auth.router import router as auth_router
 from backend.app.policies.router import router as policy_router
+from backend.app.resources.router import router as resource_router
+from backend.app.scans.router import router as scan_router
 from config import settings
 
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Multi-cloud security policy scanning and compliance reporting API.",
+    description=(
+        "Multi-cloud security policy scanning and compliance reporting API."
+    ),
 )
 
 
@@ -49,3 +53,5 @@ def health_check() -> dict:
 
 app.include_router(auth_router)
 app.include_router(policy_router)
+app.include_router(resource_router)
+app.include_router(scan_router)

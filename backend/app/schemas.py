@@ -4,6 +4,11 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
+CloudProvider = Literal["aws", "azure", "gcp"]
+ResourceStatus = Literal["active", "inactive"]
+ScanStatus = Literal["pending", "running", "completed", "failed"]
+
+
 class UserBase(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=50)
@@ -35,22 +40,42 @@ class TokenData(BaseModel):
 
 
 class ResourceBase(BaseModel):
-    name: str
-    resource_type: str
-    cloud_provider: str
+    name: str = Field(min_length=1, max_length=200)
+    resource_type: str = Field(min_length=3, max_length=100)
+    cloud_provider: CloudProvider
+    cloud_id: str = Field(min_length=1, max_length=500)
+    organization_id: Optional[int] = Field(default=None, ge=1)
+    region: Optional[str] = Field(default=None, max_length=100)
+    configuration: dict[str, Any] = Field(default_factory=dict)
+    status: ResourceStatus = "active"
+
+
+class ResourceCreate(ResourceBase):
+    pass
+
+
+class ResourceUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    region: Optional[str] = Field(default=None, max_length=100)
+    configuration: Optional[dict[str, Any]] = None
+    status: Optional[ResourceStatus] = None
 
 
 class Resource(ResourceBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    first_discovered_at: datetime
+    last_discovered_at: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
 class PolicyBase(BaseModel):
     name: str = Field(min_length=3, max_length=120)
     description: str = Field(min_length=10, max_length=1000)
     severity: Literal["low", "medium", "high", "critical"]
-    cloud_provider: Literal["aws", "azure", "gcp"]
+    cloud_provider: CloudProvider
     resource_type: str = Field(min_length=3, max_length=100)
     rule_type: Literal["boolean_property_equals", "field_must_exist"]
     rule_config: dict[str, Any] = Field(default_factory=dict)
@@ -59,13 +84,16 @@ class PolicyBase(BaseModel):
     def validate_rule_config(self) -> "PolicyBase":
         field_name = self.rule_config.get("field")
         if not isinstance(field_name, str) or not field_name.strip():
-            raise ValueError("rule_config must include a non-empty 'field' name.")
+            raise ValueError(
+                "rule_config must include a non-empty 'field' name."
+            )
 
         if self.rule_type == "boolean_property_equals":
             expected_value = self.rule_config.get("expected_value")
             if not isinstance(expected_value, bool):
                 raise ValueError(
-                    "boolean_property_equals requires a boolean 'expected_value'."
+                    "boolean_property_equals requires a boolean "
+                    "'expected_value'."
                 )
 
         return self
@@ -89,7 +117,7 @@ class Policy(PolicyBase):
 
 class PolicyEvaluationRequest(BaseModel):
     resource_name: str = Field(min_length=1, max_length=200)
-    cloud_provider: Literal["aws", "azure", "gcp"]
+    cloud_provider: CloudProvider
     resource_type: str = Field(min_length=3, max_length=100)
     configuration: dict[str, Any] = Field(default_factory=dict)
 
@@ -106,3 +134,43 @@ class PolicyEvaluationResponse(BaseModel):
     resource_name: str
     checked_policy_count: int
     results: list[PolicyEvaluationResult]
+
+
+class ScanCreate(BaseModel):
+    organization_id: Optional[int] = Field(default=None, ge=1)
+    cloud_provider: CloudProvider
+    resource_type: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=100,
+    )
+
+
+class Scan(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    organization_id: Optional[int]
+    requested_by_user_id: Optional[int]
+    cloud_provider: CloudProvider
+    resource_type: Optional[str]
+    status: ScanStatus
+    total_resources: int
+    compliant_count: int
+    non_compliant_count: int
+    error_message: Optional[str]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+
+class ComplianceResult(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    scan_id: int
+    resource_id: int
+    policy_id: int
+    compliant: bool
+    details: str
+    created_at: datetime
