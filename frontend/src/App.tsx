@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import AuthPage, { type AuthUser } from "./AuthPage";
+import ResourcesPage from "./ResourcesPage";
 import {
   Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu,
@@ -33,6 +34,7 @@ export default function App() {
   const [mobileNav, setMobileNav] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [activeView, setActiveView] = useState("Overview");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,14 +74,14 @@ export default function App() {
     <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
       <div className="brand-row"><div className="brand-icon"><ShieldCheck /></div><div><strong>Cloud Policy</strong><span>Checker</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X /></button></div>
       <div className="workspace-card"><span className="eyebrow">Workspace</span><button><Cloud /> Production Cloud <ChevronDown /></button></div>
-      <nav><span className="nav-heading">Security posture</span>{navigation.map(({ label, icon: Icon, active }) => <a className={active ? "active" : ""} href={`#${label.toLowerCase()}`} key={label}><Icon />{label}{label === "Findings" && <span className="nav-count">12</span>}</a>)}</nav>
+      <nav><span className="nav-heading">Security posture</span>{navigation.map(({ label, icon: Icon }) => <button className={activeView === label ? "active" : ""} onClick={() => { setActiveView(label); setMobileNav(false); }} key={label}><Icon />{label}{label === "Findings" && <span className="nav-count">12</span>}</button>)}</nav>
       <div className="sidebar-footer"><a href="#settings"><Settings /> Settings</a><button className="user-card" onClick={logout} title="Sign out"><CircleUserRound /><div><strong>{user.username}</strong><span>Sign out</span></div></button></div>
     </aside>
     {mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} />}
 
     <main className="main-content">
       <header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu /></button><div className="search-box"><Search /><input aria-label="Search" placeholder="Search resources, policies, or findings" /></div><div className="topbar-actions"><div className={`api-status ${apiState}`}><span /> API {apiState}</div><button className="icon-button"><Bell /><i /></button></div></header>
-      <div className="page-content">
+      <div className="page-content">{activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
         <section className="page-heading"><div><span className="eyebrow accent">Unified cloud security</span><h1>Security posture overview</h1><p>Monitor policy compliance, cloud resources, and scan activity from one place.</p></div><button className="primary-button"><Play /> Run new scan</button></section>
         <div className="preview-notice"><Activity /><div><strong>Dashboard preview</strong><span>Visual metrics use demonstration data. API connectivity is live.</span></div></div>
         <section className="metrics-grid"><Metric icon={Gauge} label="Compliance score" value="84%" detail="6% improvement" tone="cyan"/><Metric icon={Boxes} label="Cloud resources" value="1,248" detail="Across 3 providers" tone="blue"/><Metric icon={AlertTriangle} label="Open findings" value="12" detail="2 critical findings" tone="orange"/><Metric icon={Radar} label="Scans this month" value="36" detail="34 completed" tone="purple"/></section>
@@ -92,7 +94,7 @@ export default function App() {
         <section className="dashboard-grid lower-grid">
           <article className="panel findings-panel" id="findings"><Heading title="Priority findings" subtitle="Risks that need attention first" action="View all findings"/><div className="table-wrap"><table><thead><tr><th>Severity</th><th>Finding</th><th>Resource</th><th>Provider</th><th>Control</th></tr></thead><tbody>{findings.map(([severity,finding,resource,provider,control]) => <tr key={control}><td><span className={`severity ${severity.toLowerCase()}`}>{severity}</span></td><td><strong>{finding}</strong></td><td>{resource}</td><td>{provider}</td><td className="control-id">{control}</td></tr>)}</tbody></table></div></article>
           <article className="panel scans-panel" id="scans"><Heading title="Recent scans" subtitle="Background job activity"/><div className="pipeline"><span className="complete">Inventory</span><i/><span className="active">Queue</span><i/><span>Evaluate</span><i/><span>Results</span></div><div className="scan-list">{scans.map(scan => <div className="scan-item" key={scan.name}><div className="scan-title"><span className={`scan-icon ${scan.state.toLowerCase()}`}>{scan.state === "Completed" ? <CheckCircle2/> : <Activity/>}</span><div><strong>{scan.name}</strong><span>{scan.time}</span></div><em>{scan.state}</em></div><div className="progress-track"><span style={{width:`${scan.progress}%`}}/></div></div>)}</div></article>
-        </section>
+        </section></>}
       </div>
     </main>
   </div>;
