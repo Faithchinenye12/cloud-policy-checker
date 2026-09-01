@@ -7,7 +7,7 @@ evaluating policies, and running auditable background scans.
 
 - JWT-based registration and authentication
 - Manual AWS, Azure, and GCP resource inventory
-- Opt-in AWS S3 discovery through the official AWS SDK
+- Opt-in AWS, Azure, and Google Cloud storage discovery through official SDKs
 - Policy creation, management, and live evaluation
 - PostgreSQL-backed scans and compliance findings
 - Redis/Celery background scan processing
@@ -72,5 +72,15 @@ list buckets and read each bucket's region, public-access-block configuration,
 and encryption configuration. During an AWS scan, discovered buckets are
 upserted into inventory before deterministic policies are evaluated.
 
-Azure and Google Cloud live discovery are not implemented yet; their current
-inventory records are manually entered through the dashboard or API.
+## Azure and Google Cloud discovery
+
+Azure and Google Cloud discovery are also disabled by default. Azure uses
+`DefaultAzureCredential` and lists storage accounts in the configured
+subscription. Google Cloud uses Application Default Credentials and lists
+buckets in the configured project. Enable either integration privately with
+`AZURE_DISCOVERY_ENABLED=true` or `GCP_DISCOVERY_ENABLED=true`, configure its
+subscription or project identifier, and restart the API and worker.
+
+Prefer managed identity, workload identity, or another short-lived credential
+source supported by the provider SDK. Never commit client secrets, service
+account keys, access tokens, or credential files.

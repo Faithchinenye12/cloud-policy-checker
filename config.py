@@ -32,6 +32,15 @@ class Settings:
         self.AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID", "")
         self.AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID", "")
         self.AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET", "")
+        self.AZURE_DISCOVERY_ENABLED = (
+            os.getenv("AZURE_DISCOVERY_ENABLED", "false").lower() == "true"
+        )
+
+        # Google Cloud configuration
+        self.GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "")
+        self.GCP_DISCOVERY_ENABLED = (
+            os.getenv("GCP_DISCOVERY_ENABLED", "false").lower() == "true"
+        )
 
         # AWS credentials
         self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")

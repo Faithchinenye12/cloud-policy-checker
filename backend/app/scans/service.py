@@ -5,6 +5,8 @@ from backend.app import models
 from backend.app.dependencies import SessionLocal
 from backend.app.policies.engine import evaluate_policy
 from backend.app.providers.aws import AwsDiscoveryError, sync_s3_inventory
+from backend.app.providers.azure import AzureDiscoveryError, sync_azure_inventory
+from backend.app.providers.gcp import GcpDiscoveryError, sync_gcp_inventory
 from config import settings
 
 
@@ -47,6 +49,10 @@ def execute_scan(scan_id: int) -> dict[str, Any]:
 
         if scan.cloud_provider == "aws" and settings.AWS_DISCOVERY_ENABLED:
             sync_s3_inventory(db)
+        elif scan.cloud_provider == "azure" and settings.AZURE_DISCOVERY_ENABLED:
+            sync_azure_inventory(db, settings.AZURE_SUBSCRIPTION_ID)
+        elif scan.cloud_provider == "gcp" and settings.GCP_DISCOVERY_ENABLED:
+            sync_gcp_inventory(db, settings.GCP_PROJECT_ID)
 
         resource_query = db.query(models.Resource).filter(
             models.Resource.status == "active",
@@ -136,7 +142,10 @@ def execute_scan(scan_id: int) -> dict[str, Any]:
             failed_scan.completed_at = datetime.utcnow()
             failed_scan.error_message = (
                 str(exc)
-                if isinstance(exc, AwsDiscoveryError)
+                if isinstance(
+                    exc,
+                    (AwsDiscoveryError, AzureDiscoveryError, GcpDiscoveryError),
+                )
                 else "The background scan could not be completed."
             )
             db.commit()
