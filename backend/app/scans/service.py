@@ -4,6 +4,8 @@ from typing import Any
 from backend.app import models
 from backend.app.dependencies import SessionLocal
 from backend.app.policies.engine import evaluate_policy
+from backend.app.providers.aws import AwsDiscoveryError, sync_s3_inventory
+from config import settings
 
 
 def execute_scan(scan_id: int) -> dict[str, Any]:
@@ -42,6 +44,9 @@ def execute_scan(scan_id: int) -> dict[str, Any]:
         scan.compliant_count = 0
         scan.non_compliant_count = 0
         db.commit()
+
+        if scan.cloud_provider == "aws" and settings.AWS_DISCOVERY_ENABLED:
+            sync_s3_inventory(db)
 
         resource_query = db.query(models.Resource).filter(
             models.Resource.status == "active",
@@ -117,7 +122,7 @@ def execute_scan(scan_id: int) -> dict[str, Any]:
             "non_compliant_count": scan.non_compliant_count,
         }
 
-    except Exception:
+    except Exception as exc:
         db.rollback()
 
         failed_scan = (
@@ -130,7 +135,9 @@ def execute_scan(scan_id: int) -> dict[str, Any]:
             failed_scan.status = "failed"
             failed_scan.completed_at = datetime.utcnow()
             failed_scan.error_message = (
-                "The background scan could not be completed."
+                str(exc)
+                if isinstance(exc, AwsDiscoveryError)
+                else "The background scan could not be completed."
             )
             db.commit()
 

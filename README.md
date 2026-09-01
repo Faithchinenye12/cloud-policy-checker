@@ -6,7 +6,8 @@ evaluating policies, and running auditable background scans.
 ## Current capabilities
 
 - JWT-based registration and authentication
-- AWS, Azure, and GCP resource inventory
+- Manual AWS, Azure, and GCP resource inventory
+- Opt-in AWS S3 discovery through the official AWS SDK
 - Policy creation, management, and live evaluation
 - PostgreSQL-backed scans and compliance findings
 - Redis/Celery background scan processing
@@ -57,3 +58,19 @@ Create a scan from the **Scans** view, then select **Run** to queue it. The
 worker evaluates active policies matching each active resource's provider and
 resource type, persists every result, and updates scan totals. Failed policy
 results appear in the **Findings** view.
+
+## AWS S3 discovery
+
+AWS discovery is disabled by default, so local demonstrations continue to use
+the manually entered inventory. To enable live S3 discovery, set
+`AWS_DISCOVERY_ENABLED=true` privately in `.env`, then restart the API and
+worker containers. Never commit `.env` or cloud credentials.
+
+The AWS SDK uses its standard credential provider chain. Prefer temporary
+credentials supplied by an IAM role. The scanning identity needs permission to
+list buckets and read each bucket's region, public-access-block configuration,
+and encryption configuration. During an AWS scan, discovered buckets are
+upserted into inventory before deterministic policies are evaluated.
+
+Azure and Google Cloud live discovery are not implemented yet; their current
+inventory records are manually entered through the dashboard or API.

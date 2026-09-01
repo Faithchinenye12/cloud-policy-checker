@@ -36,7 +36,11 @@ class Settings:
         # AWS credentials
         self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
         self.AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+        self.AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN", "")
         self.AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+        self.AWS_DISCOVERY_ENABLED = (
+            os.getenv("AWS_DISCOVERY_ENABLED", "false").lower() == "true"
+        )
 
     @staticmethod
     def _required(name: str) -> str:

@@ -1,0 +1,1 @@
+"""Cloud-provider inventory adapters."""
