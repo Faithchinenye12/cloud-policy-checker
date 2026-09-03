@@ -181,3 +181,48 @@ class ComplianceResult(BaseModel):
     compliant: bool
     details: str
     created_at: datetime
+
+
+class IntelligenceNode(BaseModel):
+    id: str
+    kind: Literal["resource", "policy", "scan", "finding"]
+    label: str
+    status: str
+    severity: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class IntelligenceEdge(BaseModel):
+    source: str
+    target: str
+    relationship: Literal[
+        "evaluated",
+        "checked_by",
+        "produced",
+        "affects",
+        "violates",
+    ]
+
+
+class IntelligenceAction(BaseModel):
+    finding_id: int
+    resource_id: int
+    policy_id: int
+    severity: str
+    title: str
+    recommendation: str
+
+
+class IntelligenceSummary(BaseModel):
+    resources: int
+    policies: int
+    scans: int
+    open_findings: int
+    risk_score: int = Field(ge=0, le=100)
+
+
+class IntelligenceGraph(BaseModel):
+    summary: IntelligenceSummary
+    nodes: list[IntelligenceNode]
+    edges: list[IntelligenceEdge]
+    priority_actions: list[IntelligenceAction]

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.auth.router import router as auth_router
 from backend.app.policies.router import router as policy_router
+from backend.app.intelligence.router import router as intelligence_router
 from backend.app.resources.router import router as resource_router
 from backend.app.scans.router import router as scan_router
 from config import settings
@@ -37,7 +38,7 @@ app.add_middleware(
 def read_root() -> dict:
     """Return a simple confirmation that the API is running."""
     return {
-        "message": "Cloud Policy Checker API is running.",
+        "message": "CloudConform API is running.",
     }
 
 
@@ -55,3 +56,4 @@ app.include_router(auth_router)
 app.include_router(policy_router)
 app.include_router(resource_router)
 app.include_router(scan_router)
+app.include_router(intelligence_router)

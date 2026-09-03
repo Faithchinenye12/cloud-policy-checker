@@ -1,4 +1,4 @@
-# Contributing to Cloud Policy Checker
+# Contributing to CloudConform
 
 Thank you for your interest in contributing!
 

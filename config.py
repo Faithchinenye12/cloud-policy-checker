@@ -11,7 +11,7 @@ load_dotenv(PROJECT_ROOT / ".env", override=True)
 class Settings:
     def __init__(self) -> None:
         # Application
-        self.APP_NAME = "Cloud Policy Checker"
+        self.APP_NAME = "CloudConform"
         self.APP_VERSION = "0.1.0"
         self.DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
