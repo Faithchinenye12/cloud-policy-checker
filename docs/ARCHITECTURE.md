@@ -14,3 +14,15 @@ the Reports page summarises and exports that stored evidence.
 The React application is compiled into static assets and served by Nginx, which
 also proxies API requests. This separation allows the API, worker, and frontend
 to scale independently while sharing one versioned contract.
+
+## Policy intelligence projection
+
+The Intelligence API projects existing compliance evidence into a connected
+graph without creating a second source of truth. Resource, policy, scan, and
+finding nodes retain their database identifiers. Typed edges explain which scan
+evaluated a resource, which policy checked it, and which finding was produced.
+
+Risk scoring is deterministic and capped at 100. Open findings contribute
+points according to policy severity, and remediation guidance is derived from
+the stored rule configuration. The Risk Intelligence workspace consumes this
+projection to present exposure, traceability, and prioritized next actions.

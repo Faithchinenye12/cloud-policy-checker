@@ -17,6 +17,8 @@ behind that work.
 - PostgreSQL-backed scans and compliance findings
 - Redis/Celery background scan processing
 - React dashboard with responsive resource, policy, scan, and finding views
+- Traceable policy intelligence graph with deterministic risk prioritization
+- Risk Intelligence workspace with evidence paths and remediation guidance
 
 ## Run with Docker Compose
 
