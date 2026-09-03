@@ -22,4 +22,4 @@ COPY --chown=appuser:appuser backend ./backend
 
 USER appuser
 
-CMD ["python", "-m", "celery", "-A", "backend.app.tasks.celery_app", "worker", "--loglevel=info"]
+CMD ["python", "-m", "celery", "-A", "backend.app.tasks.celery_app", "worker", "--loglevel=info", "--pool=solo", "--concurrency=1"]
