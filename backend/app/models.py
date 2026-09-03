@@ -116,6 +116,9 @@ class Policy(Base):
         "ComplianceResult",
         back_populates="policy",
     )
+    framework_mappings = relationship(
+        "PolicyFrameworkMapping", back_populates="policy", cascade="all, delete-orphan"
+    )
 
 
 class Scan(Base):
@@ -248,3 +251,44 @@ class RemediationEvent(Base):
 
     compliance_result = relationship("ComplianceResult", back_populates="remediation_events")
     actor_user = relationship("User", foreign_keys=[actor_user_id])
+
+
+class ComplianceFramework(Base):
+    __tablename__ = "compliance_frameworks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    version = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    source_url = Column(String, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    controls = relationship("FrameworkControl", back_populates="framework", cascade="all, delete-orphan")
+
+
+class FrameworkControl(Base):
+    __tablename__ = "framework_controls"
+
+    id = Column(Integer, primary_key=True, index=True)
+    framework_id = Column(Integer, ForeignKey("compliance_frameworks.id", ondelete="CASCADE"), nullable=False, index=True)
+    code = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    domain = Column(String, nullable=False)
+    guidance = Column(Text, nullable=False)
+
+    framework = relationship("ComplianceFramework", back_populates="controls")
+    policy_mappings = relationship("PolicyFrameworkMapping", back_populates="control", cascade="all, delete-orphan")
+
+
+class PolicyFrameworkMapping(Base):
+    __tablename__ = "policy_framework_mappings"
+
+    policy_id = Column(Integer, ForeignKey("policies.id", ondelete="CASCADE"), primary_key=True)
+    control_id = Column(Integer, ForeignKey("framework_controls.id", ondelete="CASCADE"), primary_key=True)
+    rationale = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    policy = relationship("Policy", back_populates="framework_mappings")
+    control = relationship("FrameworkControl", back_populates="policy_mappings")

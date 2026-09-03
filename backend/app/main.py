@@ -6,6 +6,7 @@ from backend.app.policies.router import router as policy_router
 from backend.app.intelligence.router import router as intelligence_router
 from backend.app.resources.router import router as resource_router
 from backend.app.remediations.router import router as remediation_router
+from backend.app.compliance.router import router as compliance_router
 from backend.app.scans.router import router as scan_router
 from config import settings
 
@@ -59,3 +60,4 @@ app.include_router(resource_router)
 app.include_router(scan_router)
 app.include_router(intelligence_router)
 app.include_router(remediation_router)
+app.include_router(compliance_router)

@@ -20,6 +20,13 @@ behind that work.
 - Traceable policy intelligence graph with deterministic risk prioritization
 - Risk Intelligence workspace with evidence paths and remediation guidance
 - Finding ownership, deadlines, lifecycle status, notes, and audit history
+- Evidence-backed readiness views for CIS Controls v8.1, NIST CSF 2.0,
+  ISO/IEC 27001:2022, and the SOC 2 Trust Services Criteria
+
+Framework mappings are product-authored crosswalks from deterministic policy
+evidence. Readiness scores are decision support, not an audit, certification,
+or endorsement by a framework publisher. A failed control remains a gap after
+workflow resolution until a later verification scan records compliant evidence.
 
 ## Run with Docker Compose
 

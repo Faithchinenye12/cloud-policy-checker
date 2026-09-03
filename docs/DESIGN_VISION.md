@@ -58,3 +58,14 @@ impression and craftsmanship makes it memorable.
 This document is a living design principle. New features should be assessed not
 only by whether they work, but by whether they make the complete security
 journey clearer, more credible, and more valuable.
+
+## From findings to assurance
+
+The compliance-readiness workspace extends that story from individual findings
+to recognizable security frameworks. CloudConform connects deterministic policy
+results to a deliberately small, traceable crosswalk across CIS Controls v8.1,
+NIST CSF 2.0, ISO/IEC 27001:2022, and the SOC 2 Trust Services Criteria. It does
+not claim certification. It shows exactly what evidence exists, what is missing,
+and which gaps still require verified remediation. This distinction is part of
+the product quality: the interface should create confidence without overstating
+what the evidence can prove.

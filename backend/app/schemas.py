@@ -254,3 +254,31 @@ class IntelligenceGraph(BaseModel):
     nodes: list[IntelligenceNode]
     edges: list[IntelligenceEdge]
     priority_actions: list[IntelligenceAction]
+
+
+class ControlReadiness(BaseModel):
+    code: str
+    title: str
+    domain: str
+    status: Literal["passed", "failed", "accepted", "not_assessed"]
+    mapped_policies: int
+    evidence_count: int
+
+
+class FrameworkReadiness(BaseModel):
+    slug: str
+    name: str
+    version: str
+    description: str
+    source_url: str
+    readiness_percent: int = Field(ge=0, le=100)
+    passed: int
+    failed: int
+    accepted: int
+    not_assessed: int
+    controls: list[ControlReadiness]
+
+
+class ComplianceReadinessResponse(BaseModel):
+    disclaimer: str
+    frameworks: list[FrameworkReadiness]

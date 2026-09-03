@@ -5,6 +5,7 @@ from backend.app import models, schemas
 from backend.app.auth.router import get_current_user
 from backend.app.dependencies import get_db
 from backend.app.policies.engine import evaluate_matching_policies
+from backend.app.compliance.service import map_policy_to_controls
 
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
@@ -34,6 +35,8 @@ def create_policy(
 
     policy = models.Policy(**policy_data.model_dump())
     db.add(policy)
+    db.flush()
+    map_policy_to_controls(db, policy)
     db.commit()
     db.refresh(policy)
 
