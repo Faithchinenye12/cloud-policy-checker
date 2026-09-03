@@ -14,6 +14,13 @@ class Settings:
         self.APP_NAME = "CloudConform"
         self.APP_VERSION = "0.1.0"
         self.DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+        self.DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
+        self.ALLOWED_ORIGINS = [
+            origin.strip() for origin in os.getenv(
+                "ALLOWED_ORIGINS",
+                "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173",
+            ).split(",") if origin.strip()
+        ]
 
         # Database and cache
         self.DATABASE_URL = self._required("DATABASE_URL")

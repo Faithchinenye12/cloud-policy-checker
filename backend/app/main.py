@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.auth.router import router as auth_router
@@ -20,20 +21,28 @@ app = FastAPI(
 )
 
 
-allowed_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def protect_demo_data(request: Request, call_next):
+    """Keep the shared recruiter demo immutable while allowing normal accounts."""
+    if request.method not in {"GET", "HEAD", "OPTIONS"} and request.url.path != "/auth/demo":
+        authorization = request.headers.get("authorization", "")
+        if authorization.startswith("Bearer "):
+            from backend.app.auth.utils import decode_access_token
+            try:
+                if decode_access_token(authorization[7:]).get("demo"):
+                    return JSONResponse(status_code=403, content={"detail":"The public demo is read-only."})
+            except Exception:
+                pass
+    return await call_next(request)
 
 
 @app.get("/", tags=["Health"])

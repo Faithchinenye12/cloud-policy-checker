@@ -13,10 +13,23 @@ from backend.app.auth.utils import (
     verify_password,
 )
 from backend.app.dependencies import get_db
+from config import settings
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@router.post("/demo", response_model=schemas.Token)
+def demo_login(db: Session = Depends(get_db)) -> schemas.Token:
+    """Issue a read-only portfolio session when public demo mode is enabled."""
+    if not settings.DEMO_MODE:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Demo mode is not enabled.")
+    user = db.query(models.User).filter(models.User.email == "demo@cloudconform.app").first()
+    if user is None:
+        user = models.User(email="demo@cloudconform.app", username="Recruiter Demo", hashed_password=hash_password("disabled-demo-password"))
+        db.add(user); db.commit(); db.refresh(user)
+    return schemas.Token(access_token=create_access_token(user.email, extra_claims={"demo": True}), token_type="bearer")
 
 
 def get_current_user(
@@ -58,6 +71,8 @@ def register_user(
     db: Session = Depends(get_db),
 ) -> models.User:
     """Create a new user account with a securely hashed password."""
+    if settings.DEMO_MODE:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Registration is disabled in the public demo.")
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

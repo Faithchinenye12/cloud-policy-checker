@@ -25,6 +25,7 @@ export default function AuthPage({
   const [error, setError] = useState("");
 
   const apiBase = import.meta.env.VITE_API_URL ?? "/api";
+  const publicDemo = import.meta.env.VITE_PUBLIC_DEMO === "true";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,6 +63,8 @@ export default function AuthPage({
     }
   }
 
+  async function exploreDemo(){setLoading(true);setError("");try{const response=await fetch(`${apiBase}/auth/demo`,{method:"POST"});if(!response.ok)throw new Error(await readError(response));const {access_token:token}=await response.json();const userResponse=await fetch(`${apiBase}/auth/me`,{headers:{Authorization:`Bearer ${token}`}});if(!userResponse.ok)throw new Error("The demo session could not be opened.");onAuthenticated(token,await userResponse.json())}catch(reason){setError(reason instanceof Error?reason.message:"The demo is unavailable.")}finally{setLoading(false)}}
+
   function changeMode(nextMode: AuthMode) {
     setMode(nextMode);
     setError("");
@@ -81,7 +84,7 @@ export default function AuthPage({
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p>{mode === "login" ? "Sign in to view your cloud security posture." : "Set up your security workspace in a few seconds."}</p>
 
-        <div className="auth-tabs"><button className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>Sign in</button><button className={mode === "register" ? "active" : ""} onClick={() => changeMode("register")}>Register</button></div>
+        {!publicDemo&&<div className="auth-tabs"><button className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>Sign in</button><button className={mode === "register" ? "active" : ""} onClick={() => changeMode("register")}>Register</button></div>}
 
         <form onSubmit={submit}>
           {mode === "register" && <label>Username<input required minLength={3} maxLength={50} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} placeholder="security-admin" /></label>}
@@ -90,6 +93,7 @@ export default function AuthPage({
           {error && <div className="auth-error" role="alert">{error}</div>}
           <button className="auth-submit" disabled={loading}>{loading ? "Please wait…" : mode === "login" ? "Sign in securely" : "Create account"}<ArrowRight /></button>
         </form>
+        <div className="demo-divider"><span>or</span></div><button className="demo-entry" disabled={loading} onClick={()=>void exploreDemo()}>Explore live demo<ArrowRight/></button>
         <div className="auth-security"><LockKeyhole /><span>Your credentials are handled by the secured API and are never displayed.</span></div>
       </div>
     </section>

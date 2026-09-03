@@ -51,6 +51,15 @@ workflow resolution until a later verification scan records compliant evidence.
 The stack includes PostgreSQL, Redis, the FastAPI service, a Celery worker, and
 the frontend.
 
+## Public recruiter demo
+
+The root `render.yaml` describes the API, worker, PostgreSQL database, Key Value
+cache, and static frontend. Render applies migrations and seeds a representative
+workspace on the first deployment. Set `ALLOWED_ORIGINS` on the API to the
+frontend URL and `VITE_API_URL` on the frontend to the public API URL, then
+redeploy both services. Visitors can use **Explore live demo** without receiving
+credentials; demo JWTs are read-only, so the shared evidence cannot be changed.
+
 ## Development checks
 
 Run backend tests from the repository root:

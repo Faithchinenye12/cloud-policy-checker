@@ -33,6 +33,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(
     subject: str,
     expires_delta: Optional[timedelta] = None,
+    extra_claims: Optional[dict] = None,
 ) -> str:
     """Create a signed access token for an authenticated user."""
     expires_at = datetime.now(timezone.utc) + (
@@ -45,6 +46,7 @@ def create_access_token(
         "sub": subject,
         "exp": expires_at,
     }
+    payload.update(extra_claims or {})
 
     return jwt.encode(
         payload,
