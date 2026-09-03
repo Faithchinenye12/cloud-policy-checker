@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole } from "lucide-react";
+import BrandMark from "./BrandMark";
 
 export type AuthUser = {
   id: number;
@@ -69,15 +70,14 @@ export default function AuthPage({
 
   return <main className="auth-page">
     <section className="auth-story">
-      <div className="auth-brand"><span><ShieldCheck /></span><strong>Cloud Policy Checker</strong></div>
+      <div className="auth-brand"><span><BrandMark /></span><strong>CloudConform</strong></div>
       <div className="auth-message"><span className="eyebrow accent">Multi-cloud security platform</span><h1>Turn cloud risk into clear, actionable policy.</h1><p>Discover resources, evaluate deterministic controls, and track security posture across AWS, Azure, and Google Cloud.</p><div className="auth-proof"><span><i />Deterministic policy evaluation</span><span><i />Background scan processing</span><span><i />Secure JWT authentication</span></div></div>
       <small>Portfolio security engineering platform</small>
     </section>
 
     <section className="auth-form-side">
       <div className="auth-card">
-        <div className="auth-mobile-brand"><ShieldCheck /> Cloud Policy Checker</div>
-        <span className="eyebrow accent">Secure workspace</span>
+        <div className="auth-mobile-brand"><BrandMark /> CloudConform</div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p>{mode === "login" ? "Sign in to view your cloud security posture." : "Set up your security workspace in a few seconds."}</p>
 

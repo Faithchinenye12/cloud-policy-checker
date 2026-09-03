@@ -1,6 +1,6 @@
 # Deployment guide
 
-Cloud Policy Checker runs as five services: the React/Nginx frontend, FastAPI
+CloudConform runs as five services: the React/Nginx frontend, FastAPI
 API, Celery worker, PostgreSQL, and Redis. Docker Compose is the supported local
 and portfolio demonstration environment.
 

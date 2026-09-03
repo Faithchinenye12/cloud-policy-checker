@@ -5,10 +5,11 @@ import ResourcesPage from "./ResourcesPage";
 import PoliciesPage from "./PoliciesPage";
 import ScansPage from "./ScansPage";
 import ReportsPage from "./ReportsPage";
+import BrandMark from "./BrandMark";
 import {
   Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu,
-  Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
+  Play, Radar, ScrollText, Search, Settings, Siren, X,
 } from "lucide-react";
 
 type ApiState = "checking" | "online" | "offline";
@@ -70,12 +71,12 @@ export default function App() {
     setUser(null);
   }
 
-  if (!authChecked) return <main className="auth-loading"><ShieldCheck /><span>Securing your workspace…</span></main>;
+  if (!authChecked) return <main className="auth-loading"><BrandMark /><span>Securing your workspace…</span></main>;
   if (!user) return <AuthPage onAuthenticated={authenticated} />;
 
   return <div className="app-shell">
     <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
-      <div className="brand-row"><div className="brand-icon"><ShieldCheck /></div><div><strong>Cloud Policy</strong><span>Checker</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X /></button></div>
+      <div className="brand-row"><div className="brand-icon"><BrandMark /></div><div><strong>CloudConform</strong><span>Security</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X /></button></div>
       <div className="workspace-card"><span className="eyebrow">Workspace</span><button><Cloud /> Production Cloud <ChevronDown /></button></div>
       <nav><span className="nav-heading">Security posture</span>{navigation.map(({ label, icon: Icon }) => <button className={activeView === label ? "active" : ""} onClick={() => { setActiveView(label); setMobileNav(false); }} key={label}><Icon />{label}</button>)}</nav>
       <div className="sidebar-footer"><a href="#settings"><Settings /> Settings</a><button className="user-card" onClick={logout} title="Sign out"><CircleUserRound /><div><strong>{user.username}</strong><span>Sign out</span></div></button></div>

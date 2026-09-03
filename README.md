@@ -1,7 +1,12 @@
-# Cloud Policy Checker
+# CloudConform
 
 A multi-cloud security and compliance platform for inventorying resources,
 evaluating policies, and running auditable background scans.
+
+The product is guided by a commitment to pair trustworthy security engineering
+with an interface that is calm, clear, and memorable. Read the
+[product and design vision](docs/DESIGN_VISION.md) for the story and standards
+behind that work.
 
 ## Current capabilities
 
