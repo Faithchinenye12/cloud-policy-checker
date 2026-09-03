@@ -9,7 +9,7 @@ type Result={id:number;scan_id:number;resource_id:number;policy_id:number;compli
 type Resource={id:number;name:string;cloud_id:string;resource_type:string;cloud_provider:Provider}; type Policy={id:number;name:string;severity:string};
 type Finding=Result&{resource?:Resource;policy?:Policy;scan?:Scan};
 
-export default function ScansPage({token,initialTab,currentUserId}:{token:string;initialTab:"scans"|"findings";currentUserId:number}){
+export default function ScansPage({token,initialTab,currentUserId,readOnly=false}:{token:string;initialTab:"scans"|"findings";currentUserId:number;readOnly?:boolean}){
   const [tab,setTab]=useState(initialTab); const [scans,setScans]=useState<Scan[]>([]); const [findings,setFindings]=useState<Finding[]>([]); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [showCreate,setShowCreate]=useState(false); const [selectedFinding,setSelectedFinding]=useState<Finding|null>(null); const [remediationForm,setRemediationForm]=useState({status:"in_progress" as RemediationStatus,assignedToMe:true,dueAt:"",note:""}); const [form,setForm]=useState({cloud_provider:"aws" as Provider,resource_type:"storage_bucket"}); const [saving,setSaving]=useState(false); const apiBase=import.meta.env.VITE_API_URL??"/api"; const headers={Authorization:`Bearer ${token}`};
   useEffect(()=>setTab(initialTab),[initialTab]);
 
@@ -24,7 +24,7 @@ export default function ScansPage({token,initialTab,currentUserId}:{token:string
   const stats=useMemo(()=>({total:scans.length,active:scans.filter(scan=>["queued","running"].includes(scan.status)).length,completed:scans.filter(scan=>scan.status==="completed").length,findings:findings.filter(item=>["open","in_progress"].includes(item.remediation_status)).length}),[scans,findings]);
 
   return <>
-    <section className="page-heading"><div><span className="eyebrow accent">Background compliance</span><h1>{tab==="scans"?"Scans":"Findings"}</h1><p>{tab==="scans"?"Create and monitor deterministic compliance jobs processed by Celery.":"Review stored policy failures produced by completed scans."}</p></div>{tab==="scans"&&<button className="primary-button" onClick={()=>setShowCreate(true)}><Plus/> New scan</button>}</section>
+    <section className="page-heading"><div><span className="eyebrow accent">Background compliance</span><h1>{tab==="scans"?"Scans":"Findings"}</h1><p>{tab==="scans"?(readOnly?"Review deterministic compliance jobs processed by Celery.":"Create and monitor deterministic compliance jobs processed by Celery."):"Review stored policy failures produced by completed scans."}</p></div>{tab==="scans"&&!readOnly&&<button className="primary-button" onClick={()=>setShowCreate(true)}><Plus/> New scan</button>}</section>
     <div className="scan-tabs"><button className={tab==="scans"?"active":""} onClick={()=>setTab("scans")}><Radar/> Scans</button><button className={tab==="findings"?"active":""} onClick={()=>setTab("findings")}><Siren/> Findings <span>{stats.findings}</span></button></div>
     <section className="scan-summary"><Summary icon={Radar} value={stats.total} label="Total scans" tone="blue"/><Summary icon={Activity} value={stats.active} label="Processing" tone="cyan"/><Summary icon={CheckCircle2} value={stats.completed} label="Completed" tone="green"/><Summary icon={AlertTriangle} value={stats.findings} label="Open findings" tone="orange"/></section>
     {error&&<div className="resource-error scan-page-error">{error}</div>}

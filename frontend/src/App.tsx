@@ -11,7 +11,7 @@ import CompliancePage from "./CompliancePage";
 import {
   Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu, Network,
-  Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
+  ArrowRight, Eye, Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
 } from "lucide-react";
 
 type ApiState = "checking" | "online" | "offline";
@@ -38,6 +38,7 @@ const scans = [
 ];
 
 export default function App() {
+  const publicDemo = import.meta.env.VITE_PUBLIC_DEMO === "true";
   const [apiState, setApiState] = useState<ApiState>("checking");
   const [mobileNav, setMobileNav] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -78,7 +79,7 @@ export default function App() {
   if (!authChecked) return <main className="auth-loading"><BrandMark /><span>Securing your workspace…</span></main>;
   if (!user) return <AuthPage onAuthenticated={authenticated} />;
 
-  return <div className="app-shell">
+  return <div className={`app-shell ${publicDemo?"public-demo":""}`}>
     <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
       <div className="brand-row"><div className="brand-icon"><BrandMark /></div><div><strong>CloudConform</strong><span>Security</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X /></button></div>
       <div className="workspace-card"><span className="eyebrow">Workspace</span><button><Cloud /> Production Cloud <ChevronDown /></button></div>
@@ -89,8 +90,8 @@ export default function App() {
 
     <main className="main-content">
       <header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu /></button><div className="search-box"><Search /><input aria-label="Search" placeholder="Search resources, policies, or findings" /></div><div className="topbar-actions"><div className={`api-status ${apiState}`}><span /> API {apiState}</div><button className="icon-button"><Bell /><i /></button></div></header>
-      <div className="page-content">{activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
-        <section className="page-heading"><div><span className="eyebrow accent">Unified cloud security</span><h1>Security posture overview</h1><p>Monitor policy compliance, cloud resources, and scan activity from one place.</p></div><button className="primary-button"><Play /> Run new scan</button></section>
+      <div className="page-content">{publicDemo&&<section className="demo-banner"><div><Eye/><span><strong>Read-only recruiter demo</strong> Explore verified sample evidence without changing the shared workspace.</span></div><nav aria-label="Suggested demo journey"><button onClick={()=>setActiveView("Resources")}>1. Resource</button><ArrowRight/><button onClick={()=>setActiveView("Policies")}>2. Controls</button><ArrowRight/><button onClick={()=>setActiveView("Intelligence")}>3. Risk</button><ArrowRight/><button onClick={()=>setActiveView("Compliance")}>4. Readiness</button></nav></section>}{activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} readOnly={publicDemo} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
+        <section className="page-heading"><div><span className="eyebrow accent">Unified cloud security</span><h1>Security posture overview</h1><p>Monitor policy compliance, cloud resources, and scan activity from one place.</p></div>{!publicDemo&&<button className="primary-button"><Play /> Run new scan</button>}</section>
         <div className="preview-notice"><Activity /><div><strong>Dashboard preview</strong><span>Visual metrics use demonstration data. API connectivity is live.</span></div></div>
         <section className="metrics-grid"><Metric icon={Gauge} label="Compliance score" value="84%" detail="6% improvement" tone="cyan"/><Metric icon={Boxes} label="Cloud resources" value="1,248" detail="Across 3 providers" tone="blue"/><Metric icon={AlertTriangle} label="Open findings" value="12" detail="2 critical findings" tone="orange"/><Metric icon={Radar} label="Scans this month" value="36" detail="34 completed" tone="purple"/></section>
 
