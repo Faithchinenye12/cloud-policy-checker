@@ -4,7 +4,6 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    preDeployCommand: alembic -c backend/alembic.ini upgrade head
     initialDeployHook: python -m backend.app.demo_seed
     healthCheckPath: /health
     envVars:
