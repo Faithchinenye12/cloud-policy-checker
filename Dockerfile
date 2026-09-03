@@ -15,4 +15,4 @@ COPY backend ./backend
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic -c backend/alembic.ini upgrade head && exec python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic -c backend/alembic.ini upgrade head && if [ \"$DEMO_MODE\" = \"true\" ]; then python -m backend.app.demo_seed; fi && exec python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
