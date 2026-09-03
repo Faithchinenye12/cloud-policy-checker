@@ -256,6 +256,15 @@ class IntelligenceGraph(BaseModel):
     priority_actions: list[IntelligenceAction]
 
 
+class ControlGap(BaseModel):
+    finding_id: int
+    resource_name: str
+    policy_name: str
+    severity: str
+    remediation_status: RemediationStatus
+    recommendation: str
+
+
 class ControlReadiness(BaseModel):
     code: str
     title: str
@@ -263,6 +272,7 @@ class ControlReadiness(BaseModel):
     status: Literal["passed", "failed", "accepted", "not_assessed"]
     mapped_policies: int
     evidence_count: int
+    gaps: list[ControlGap] = Field(default_factory=list)
 
 
 class FrameworkReadiness(BaseModel):

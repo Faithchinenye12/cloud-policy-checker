@@ -69,3 +69,9 @@ not claim certification. It shows exactly what evidence exists, what is missing,
 and which gaps still require verified remediation. This distinction is part of
 the product quality: the interface should create confidence without overstating
 what the evidence can prove.
+
+Failed framework controls now open a guided remediation playbook. The playbook
+connects the framework gap to the affected resource and finding, explains the
+required configuration change, and routes the user into the auditable ownership
+workflow. Closing a ticket alone does not inflate readiness: a later passing scan
+must verify the change before the control is counted as ready.

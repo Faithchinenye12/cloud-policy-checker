@@ -29,6 +29,14 @@ def map_policy_to_controls(db: Any, policy: Any) -> None:
         ))
 
 
+def _recommendation(result: Any) -> str:
+    field = result.policy.rule_config.get("field", "required configuration")
+    if result.policy.rule_type == "boolean_property_equals":
+        expected = result.policy.rule_config.get("expected_value")
+        return f"Set {field} to {expected}, save the cloud configuration, then run a verification scan."
+    return f"Provide a valid value for {field}, then run a verification scan."
+
+
 def build_readiness(frameworks: list[Any], results: list[Any]) -> schemas.ComplianceReadinessResponse:
     """Calculate readiness from the newest stored result for each mapped policy."""
     latest_by_policy: dict[int, Any] = {}
@@ -51,9 +59,15 @@ def build_readiness(frameworks: list[Any], results: list[Any]) -> schemas.Compli
             else:
                 status = "passed"
             counts[status] += 1
+            gaps = [schemas.ControlGap(
+                finding_id=item.id, resource_name=item.resource.name,
+                policy_name=item.policy.name, severity=item.policy.severity,
+                remediation_status=item.remediation_status,
+                recommendation=_recommendation(item),
+            ) for item in evidence if not item.compliant]
             controls.append(schemas.ControlReadiness(
                 code=control.code, title=control.title, domain=control.domain, status=status,
-                mapped_policies=len(policy_ids), evidence_count=len(evidence),
+                mapped_policies=len(policy_ids), evidence_count=len(evidence), gaps=gaps,
             ))
         total = len(controls)
         readiness = round(counts["passed"] / total * 100) if total else 0

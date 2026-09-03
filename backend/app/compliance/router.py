@@ -13,5 +13,8 @@ router = APIRouter(prefix="/compliance", tags=["Compliance"])
 def get_readiness(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     _ = current_user
     frameworks = db.query(models.ComplianceFramework).options(joinedload(models.ComplianceFramework.controls).joinedload(models.FrameworkControl.policy_mappings)).filter(models.ComplianceFramework.is_active.is_(True)).order_by(models.ComplianceFramework.id).all()
-    results = db.query(models.ComplianceResult).order_by(models.ComplianceResult.created_at.desc()).all()
+    results = db.query(models.ComplianceResult).options(
+        joinedload(models.ComplianceResult.resource),
+        joinedload(models.ComplianceResult.policy),
+    ).order_by(models.ComplianceResult.created_at.desc()).all()
     return build_readiness(frameworks, results)
