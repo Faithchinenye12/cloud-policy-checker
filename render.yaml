@@ -2,6 +2,7 @@ services:
   - type: web
     name: cloudconform-api
     runtime: docker
+    plan: free
     dockerfilePath: ./Dockerfile
     preDeployCommand: alembic -c backend/alembic.ini upgrade head
     initialDeployHook: python -m backend.app.demo_seed
@@ -20,6 +21,7 @@ services:
   - type: worker
     name: cloudconform-worker
     runtime: docker
+    plan: 0.5c-512mb
     dockerfilePath: ./Dockerfile.worker
     envVars:
       - key: DATABASE_URL
@@ -30,6 +32,7 @@ services:
         fromService: { name: cloudconform-api, type: web, envVarKey: JWT_SECRET_KEY }
   - type: keyvalue
     name: cloudconform-cache
+    plan: free
     ipAllowList: []
   - type: web
     name: cloudconform-demo
@@ -48,5 +51,6 @@ services:
         destination: /index.html
 databases:
   - name: cloudconform-db
+    plan: free
     databaseName: cloudconform
     user: cloudconform
