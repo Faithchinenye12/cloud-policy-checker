@@ -85,7 +85,8 @@ def build_intelligence_graph(results: Iterable[Any]) -> schemas.IntelligenceGrap
             }
         )
 
-        if not result.compliant:
+        remediation_status = getattr(result, "remediation_status", "open")
+        if not result.compliant and remediation_status in {"open", "in_progress"}:
             risk_points += SEVERITY_WEIGHT.get(severity, 10)
             actions.append(
                 schemas.IntelligenceAction(

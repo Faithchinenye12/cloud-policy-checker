@@ -19,6 +19,7 @@ behind that work.
 - React dashboard with responsive resource, policy, scan, and finding views
 - Traceable policy intelligence graph with deterministic risk prioritization
 - Risk Intelligence workspace with evidence paths and remediation guidance
+- Finding ownership, deadlines, lifecycle status, notes, and audit history
 
 ## Run with Docker Compose
 

@@ -30,6 +30,11 @@ class User(Base):
         "Scan",
         back_populates="requested_by_user",
     )
+    assigned_remediations = relationship(
+        "ComplianceResult",
+        back_populates="assigned_to_user",
+        foreign_keys="ComplianceResult.assigned_to_user_id",
+    )
 
 
 class Organization(Base):
@@ -193,6 +198,16 @@ class ComplianceResult(Base):
     )
     compliant = Column(Boolean, nullable=False)
     details = Column(Text, nullable=False)
+    remediation_status = Column(String, nullable=False, default="open", index=True)
+    assigned_to_user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    due_at = Column(DateTime, nullable=True)
+    remediation_note = Column(Text, nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     scan = relationship(
@@ -207,3 +222,29 @@ class ComplianceResult(Base):
         "Policy",
         back_populates="compliance_results",
     )
+    assigned_to_user = relationship(
+        "User",
+        back_populates="assigned_remediations",
+        foreign_keys=[assigned_to_user_id],
+    )
+    remediation_events = relationship(
+        "RemediationEvent",
+        back_populates="compliance_result",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class RemediationEvent(Base):
+    __tablename__ = "remediation_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    compliance_result_id = Column(Integer, ForeignKey("compliance_results.id", ondelete="CASCADE"), nullable=False, index=True)
+    actor_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    previous_status = Column(String, nullable=False)
+    new_status = Column(String, nullable=False)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    compliance_result = relationship("ComplianceResult", back_populates="remediation_events")
+    actor_user = relationship("User", foreign_keys=[actor_user_id])

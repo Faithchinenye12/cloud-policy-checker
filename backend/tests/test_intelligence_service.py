@@ -25,6 +25,7 @@ def evidence(result_id=1, compliant=False, severity="high"):
         id=result_id,
         compliant=compliant,
         details="Configuration does not match.",
+        remediation_status="open",
         resource=resource,
         policy=policy,
         scan=scan,
@@ -61,6 +62,17 @@ def test_graph_deduplicates_entities_and_caps_risk_score():
 def test_compliant_evidence_has_no_priority_action():
     graph = build_intelligence_graph([evidence(compliant=True)])
 
+    assert graph.summary.open_findings == 0
+    assert graph.summary.risk_score == 0
+    assert graph.priority_actions == []
+
+
+def test_resolved_evidence_remains_in_graph_without_active_risk():
+    result = evidence()
+    result.remediation_status = "resolved"
+    graph = build_intelligence_graph([result])
+
+    assert any(node.kind == "finding" for node in graph.nodes)
     assert graph.summary.open_findings == 0
     assert graph.summary.risk_score == 0
     assert graph.priority_actions == []

@@ -26,3 +26,14 @@ Risk scoring is deterministic and capped at 100. Open findings contribute
 points according to policy severity, and remediation guidance is derived from
 the stored rule configuration. The Risk Intelligence workspace consumes this
 projection to present exposure, traceability, and prioritized next actions.
+
+## Remediation workflow
+
+Each non-compliant result has an independent remediation lifecycle: open, in
+progress, resolved, or risk accepted. A finding may be assigned to a user and
+given a due date and working note. Every save appends an immutable transition
+event with the actor, status movement, note, and timestamp.
+
+Resolved and accepted findings remain connected to their original resource,
+policy, and scan evidence, but no longer contribute to active risk scoring or
+the priority action queue. Accepted risk requires a written justification.

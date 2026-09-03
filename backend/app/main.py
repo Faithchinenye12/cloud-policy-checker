@@ -5,6 +5,7 @@ from backend.app.auth.router import router as auth_router
 from backend.app.policies.router import router as policy_router
 from backend.app.intelligence.router import router as intelligence_router
 from backend.app.resources.router import router as resource_router
+from backend.app.remediations.router import router as remediation_router
 from backend.app.scans.router import router as scan_router
 from config import settings
 
@@ -57,3 +58,4 @@ app.include_router(policy_router)
 app.include_router(resource_router)
 app.include_router(scan_router)
 app.include_router(intelligence_router)
+app.include_router(remediation_router)

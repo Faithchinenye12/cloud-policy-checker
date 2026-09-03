@@ -13,6 +13,7 @@ ScanStatus = Literal[
     "completed",
     "failed",
 ]
+RemediationStatus = Literal["open", "in_progress", "resolved", "risk_accepted"]
 
 
 class UserBase(BaseModel):
@@ -180,7 +181,34 @@ class ComplianceResult(BaseModel):
     policy_id: int
     compliant: bool
     details: str
+    remediation_status: RemediationStatus = "open"
+    assigned_to_user_id: Optional[int] = None
+    due_at: Optional[datetime] = None
+    remediation_note: Optional[str] = None
+    resolved_at: Optional[datetime] = None
     created_at: datetime
+
+
+class RemediationUpdate(BaseModel):
+    status: RemediationStatus
+    assigned_to_user_id: Optional[int] = Field(default=None, ge=1)
+    due_at: Optional[datetime] = None
+    note: Optional[str] = Field(default=None, max_length=2000)
+
+
+class RemediationEvent(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    compliance_result_id: int
+    actor_user_id: Optional[int]
+    previous_status: RemediationStatus
+    new_status: RemediationStatus
+    note: Optional[str]
+    created_at: datetime
+
+
+class RemediationRecord(ComplianceResult):
+    remediation_events: list[RemediationEvent] = Field(default_factory=list)
 
 
 class IntelligenceNode(BaseModel):
