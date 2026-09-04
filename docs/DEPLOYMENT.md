@@ -4,6 +4,26 @@ CloudConform runs as five services: the React/Nginx frontend, FastAPI
 API, Celery worker, PostgreSQL, and Redis. Docker Compose is the supported local
 and portfolio demonstration environment.
 
+## Public Render deployment
+
+The root `render.yaml` declares the public portfolio topology:
+
+- `cloudconform-demo` — static React recruiter experience
+- `cloudconform-api` — FastAPI service
+- `cloudconform-worker` — Celery background worker
+- `cloudconform-db` — managed PostgreSQL
+- `cloudconform-cache` — managed Redis-compatible key-value service
+
+Set `ALLOWED_ORIGINS` to the exact frontend origin and `VITE_API_URL` to the
+public API URL. `DEMO_MODE=true` seeds representative evidence and activates
+server-enforced read-only behaviour. The frontend's `VITE_PUBLIC_DEMO=true`
+provides the recruiter tour and hides irrelevant mutation controls.
+
+Free infrastructure may sleep, expire, or lose demonstration data. The client
+labels API startup as **Service waking up** and retries automatically. Treat the
+public environment as replaceable: migrations and demo seeding must be capable
+of rebuilding it from source.
+
 ## Production principles
 
 Use managed PostgreSQL and Redis services, terminate TLS at a load balancer or

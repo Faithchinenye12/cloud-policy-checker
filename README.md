@@ -1,112 +1,158 @@
 # CloudConform
 
-**[Explore the live read-only recruiter demo](https://cloudconform-demo.onrender.com)**
+[![Live demo](https://img.shields.io/badge/Live_demo-Explore_CloudConform-2383e2?style=for-the-badge)](https://cloudconform-demo.onrender.com)
+[![CI](https://github.com/Faithchinenye12/cloud-policy-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/Faithchinenye12/cloud-policy-checker/actions/workflows/ci.yml)
 
-A multi-cloud security and compliance platform for inventorying resources,
-evaluating policies, and running auditable background scans.
+**An evidence-first cloud security and compliance platform that makes every result understandable, traceable, and actionable.**
 
-The product is guided by a commitment to pair trustworthy security engineering
-with an interface that is calm, clear, and memorable. Read the
-[product and design vision](docs/DESIGN_VISION.md) for the story and standards
-behind that work.
+CloudConform connects cloud inventory, deterministic policies, background scans,
+findings, remediation, and compliance readiness in one decision trail. The live
+recruiter environment is safe and read-only, includes representative evidence,
+and requires no credentials.
 
-## Current capabilities
+> [Explore the live recruiter demo](https://cloudconform-demo.onrender.com) and
+> follow **Resource → Control → Risk → Readiness**, or choose **Guided tour**.
+> Render's free API can take a short moment to wake on the first visit; the
+> interface reconnects automatically.
 
-- JWT-based registration and authentication
-- Manual AWS, Azure, and GCP resource inventory
-- Opt-in AWS, Azure, and Google Cloud storage discovery through official SDKs
-- Policy creation, management, and live evaluation
-- PostgreSQL-backed scans and compliance findings
-- Redis/Celery background scan processing
-- React dashboard with responsive resource, policy, scan, and finding views
-- Traceable policy intelligence graph with deterministic risk prioritization
-- Risk Intelligence workspace with evidence paths and remediation guidance
-- Finding ownership, deadlines, lifecycle status, notes, and audit history
-- Evidence-backed readiness views for CIS Controls v8.1, NIST CSF 2.0,
-  ISO/IEC 27001:2022, and the SOC 2 Trust Services Criteria
+## Why CloudConform
 
-Framework mappings are product-authored crosswalks from deterministic policy
-evidence. Readiness scores are decision support, not an audit, certification,
-or endorsement by a framework publisher. A failed control remains a gap after
-workflow resolution until a later verification scan records compliant evidence.
+Cloud-security dashboards can identify failures without making the underlying
+evidence, ownership, or next action easy to understand. CloudConform is designed
+around a clearer operational story:
 
-## Run with Docker Compose
+1. **Resource** — preserve the asset configuration that establishes reality.
+2. **Control** — evaluate it with an explicit, deterministic policy.
+3. **Risk** — connect failed evidence to severity, ownership, and remediation.
+4. **Readiness** — map verified outcomes to recognised security frameworks.
 
-1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET_KEY` containing
-   at least 32 characters.
-2. Start the database and cache, then apply the database migrations:
+The result is not another unexplained score. A user can trace every conclusion
+back to the resource, policy, scan, and stored result that produced it.
+
+## Product highlights
+
+- Multi-cloud inventory for AWS, Azure, and Google Cloud
+- Opt-in storage discovery through official provider SDKs
+- Explainable boolean policy rules and live configuration testing
+- PostgreSQL-backed evidence from asynchronous Celery scans
+- Finding ownership, deadlines, status, notes, and immutable transition history
+- Deterministic risk prioritisation and resource-to-finding traceability
+- Guided remediation followed by verification scanning
+- Evidence-based CIS, NIST, ISO 27001, and SOC 2 readiness views
+- CSV reporting and an intentionally read-only public demonstration
+- Responsive React interface with a guided first-visit product journey
+
+Framework mappings are product-authored crosswalks from deterministic technical
+evidence. Readiness is decision support—not an audit, certification, or
+endorsement by a framework publisher. Closing a workflow item does not raise a
+score until a later scan records passing evidence.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser[React recruiter workspace] -->|JWT + HTTPS| API[FastAPI API]
+    API --> DB[(PostgreSQL evidence store)]
+    API -->|Queue scan| Redis[(Redis)]
+    Redis --> Worker[Celery worker]
+    Worker -->|Read-only discovery| Clouds[AWS / Azure / GCP]
+    Worker -->|Persist results| DB
+    DB --> Graph[Risk and readiness projection]
+    Graph --> API
+```
+
+The API owns inventory, policies, scans, findings, and remediation state. Redis
+transports work; the Celery worker discovers and evaluates; PostgreSQL preserves
+the evidence. Risk intelligence and readiness are projections of stored results
+rather than separate sources of truth.
+
+Read the detailed [architecture](docs/ARCHITECTURE.md),
+[deployment guide](docs/DEPLOYMENT.md), and
+[product and design vision](docs/DESIGN_VISION.md).
+
+## Recruiter walkthrough
+
+A useful five-minute review path is:
+
+1. Open the [live demo](https://cloudconform-demo.onrender.com).
+2. Choose **Guided tour** to follow the evidence journey.
+3. Open **Intelligence** to inspect the traceability map and priority queue.
+4. Open **Compliance** to compare passing evidence with unresolved gaps.
+5. Open **Why CloudConform** for the product rationale and engineering story.
+
+The public workspace contains sample evidence and blocks mutation controls. The
+source repository also contains the full authenticated application and its real
+API, worker, persistence, migration, and provider-integration paths.
+
+## Run locally
+
+Requirements: Docker Desktop and Docker Compose.
+
+1. Copy `.env.example` to `.env` and set a unique `JWT_SECRET_KEY` of at least
+   32 characters.
+2. Start persistence and apply migrations:
 
    ```sh
    docker compose up -d postgres redis
    docker compose run --rm api alembic -c backend/alembic.ini upgrade head
    ```
 
-3. Build and start the application services:
+3. Build and run the complete stack:
 
    ```sh
    docker compose up --build
    ```
 
-4. Open the dashboard at <http://localhost:3000>. The API documentation is at
+4. Open <http://localhost:3000>. Interactive API documentation is available at
    <http://localhost:8000/docs>.
 
-The stack includes PostgreSQL, Redis, the FastAPI service, a Celery worker, and
-the frontend.
+## Live cloud discovery
 
-## Public recruiter demo
+Discovery is disabled by default so local and public demonstrations remain safe
+and deterministic. Enable only the provider configured privately:
 
-The root `render.yaml` describes the API, worker, PostgreSQL database, Key Value
-cache, and static frontend. Render applies migrations and seeds a representative
-workspace on the first deployment. Set `ALLOWED_ORIGINS` on the API to the
-frontend URL and `VITE_API_URL` on the frontend to the public API URL, then
-redeploy both services. Visitors can use **Explore live demo** without receiving
-credentials; demo JWTs are read-only, so the shared evidence cannot be changed.
+- `AWS_DISCOVERY_ENABLED=true`
+- `AZURE_DISCOVERY_ENABLED=true`
+- `GCP_DISCOVERY_ENABLED=true`
 
-## Development checks
+Prefer IAM roles, workload identity, managed identity, or another short-lived
+credential source supported by the provider SDK. Never commit `.env`, client
+secrets, service-account keys, access tokens, or credential files.
 
-Run backend tests from the repository root:
-
-```sh
-pytest -c backend/pytest.ini
-```
-
-Build the frontend:
+## Quality checks
 
 ```sh
-cd frontend
-npm install
-npm run build
+pytest -c backend/pytest.ini backend/tests
+cd frontend && npm install && npm run build
+docker build -t cloudconform-api .
+docker build -f Dockerfile.worker -t cloudconform-worker .
+docker build -t cloudconform-frontend frontend
 ```
 
-## Scan workflow
+GitHub Actions repeats backend tests, frontend compilation, security analysis,
+and all three container builds on pushes and pull requests.
 
-Create a scan from the **Scans** view, then select **Run** to queue it. The
-worker evaluates active policies matching each active resource's provider and
-resource type, persists every result, and updates scan totals. Failed policy
-results appear in the **Findings** view.
+## Scope and limitations
 
-## AWS S3 discovery
+CloudConform is a focused product demonstration, not a commercial CNAPP or an
+auditing body. The current policy catalogue intentionally covers a small set of
+storage controls; provider discovery is storage-focused; the public database is
+ephemeral; and readiness mappings cover technical evidence rather than every
+organisational or process control. Those boundaries are labelled so the demo
+shows credible engineering without overstating assurance.
 
-AWS discovery is disabled by default, so local demonstrations continue to use
-the manually entered inventory. To enable live S3 discovery, set
-`AWS_DISCOVERY_ENABLED=true` privately in `.env`, then restart the API and
-worker containers. Never commit `.env` or cloud credentials.
+## Roadmap
 
-The AWS SDK uses its standard credential provider chain. Prefer temporary
-credentials supplied by an IAM role. The scanning identity needs permission to
-list buckets and read each bucket's region, public-access-block configuration,
-and encryption configuration. During an AWS scan, discovered buckets are
-upserted into inventory before deterministic policies are evaluated.
+- Expand the policy catalogue and provider resource coverage
+- Add scheduled continuous scans and change-triggered evaluation
+- Introduce organisation, workspace, and role-based access boundaries
+- Add notification and ticketing integrations for remediation ownership
+- Version policy-to-framework mappings and export fuller evidence packages
+- Add end-to-end browser tests, observability, and production SLOs
 
-## Azure and Google Cloud discovery
+## Design principle
 
-Azure and Google Cloud discovery are also disabled by default. Azure uses
-`DefaultAzureCredential` and lists storage accounts in the configured
-subscription. Google Cloud uses Application Default Credentials and lists
-buckets in the configured project. Enable either integration privately with
-`AZURE_DISCOVERY_ENABLED=true` or `GCP_DISCOVERY_ENABLED=true`, configure its
-subscription or project identifier, and restart the API and worker.
-
-Prefer managed identity, workload identity, or another short-lived credential
-source supported by the provider SDK. Never commit client secrets, service
-account keys, access tokens, or credential files.
+CloudConform aims to prove that security depth and interface quality can
+reinforce one another. Restrained visual design reduces cognitive load;
+deterministic evaluation builds trust; and preserved evidence makes every
+decision defensible. See [the full design story](docs/DESIGN_VISION.md).

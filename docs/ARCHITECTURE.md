@@ -1,5 +1,24 @@
 # Architecture
 
+## System view
+
+```mermaid
+flowchart TB
+    User[Browser] -->|Static application| Frontend[React / Nginx]
+    Frontend -->|JWT API requests| API[FastAPI]
+    API --> Postgres[(PostgreSQL)]
+    API -->|Publish scan job| Redis[(Redis)]
+    Redis --> Worker[Celery worker]
+    Worker --> Providers[Official cloud SDKs]
+    Providers --> AWS[AWS]
+    Providers --> Azure[Azure]
+    Providers --> GCP[Google Cloud]
+    Worker --> Engine[Deterministic policy engine]
+    Engine -->|Evidence results| Postgres
+    Postgres --> Projection[Risk + readiness projection]
+    Projection --> API
+```
+
 The browser authenticates with FastAPI and sends its JWT in the authorization
 header. FastAPI owns inventory, policies, scans, and persisted compliance
 results in PostgreSQL. Scan requests are queued through Redis and executed by a
@@ -37,3 +56,20 @@ event with the actor, status movement, note, and timestamp.
 Resolved and accepted findings remain connected to their original resource,
 policy, and scan evidence, but no longer contribute to active risk scoring or
 the priority action queue. Accepted risk requires a written justification.
+
+## Trust boundaries
+
+- The browser receives a JWT but never receives cloud-provider credentials.
+- Provider discovery runs server-side and is disabled until explicitly enabled.
+- Discovery reads configuration; remediation guidance does not mutate cloud
+  infrastructure automatically.
+- The API is the only application component that serves browser requests.
+- Risk and readiness views derive from persisted scan results, preserving one
+  evidence source of truth.
+
+## Public demo boundary
+
+The recruiter deployment seeds representative data and issues a restricted demo
+identity. The frontend removes mutation controls for clarity, while the API
+enforces read-only behaviour independently. The demo is therefore useful for
+exploration without treating interface hiding as a security control.
