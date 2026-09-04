@@ -153,7 +153,7 @@ secrets, service-account keys, access tokens, or credential files.
 
 ```sh
 pytest -c backend/pytest.ini backend/tests
-cd frontend && npm install && npm run build
+cd frontend && npm ci --no-audit --no-fund && npm run build
 docker build -t cloudconform-api .
 docker build -f Dockerfile.worker -t cloudconform-worker .
 docker build -t cloudconform-frontend frontend

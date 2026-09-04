@@ -207,6 +207,8 @@ tempCodeRunnerFile.py
 # Frontend dependencies and build output
 node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
 
 # Ruff stuff:
 .ruff_cache/

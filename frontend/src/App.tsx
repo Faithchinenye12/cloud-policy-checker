@@ -56,6 +56,10 @@ export default function App() {
   const [showTour, setShowTour] = useState(() => publicDemo && localStorage.getItem("cloudconform_tour_seen") !== "true");
 
   useEffect(() => {
+    if (showTour) setActiveView(tour[tourStep].view);
+  }, [showTour, tourStep]);
+
+  useEffect(() => {
     let disposed = false;
     let retryTimer = 0;
     let controller: AbortController | null = null;

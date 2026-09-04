@@ -64,8 +64,18 @@ jobs:
       - name: Install and build frontend
         working-directory: frontend
         run: |
-          npm install
+          npm ci --no-audit --no-fund
           npm run build
+
+      - name: Install browser for recruiter journey
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Test recruiter journey
+        working-directory: frontend
+        env:
+          VITE_PUBLIC_DEMO: "true"
+        run: npm run test:e2e
 
   docker-build:
     runs-on: ubuntu-latest
