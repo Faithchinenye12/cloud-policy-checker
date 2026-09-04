@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from jose import JWTError
 
 from backend.app.auth.router import router as auth_router
 from backend.app.policies.router import router as policy_router
@@ -37,12 +38,28 @@ async def protect_demo_data(request: Request, call_next):
         authorization = request.headers.get("authorization", "")
         if authorization.startswith("Bearer "):
             from backend.app.auth.utils import decode_access_token
+
             try:
                 if decode_access_token(authorization[7:]).get("demo"):
-                    return JSONResponse(status_code=403, content={"detail":"The public demo is read-only."})
-            except Exception:
+                    return JSONResponse(
+                        status_code=403,
+                        content={"detail": "The public demo is read-only."},
+                    )
+            except JWTError:
                 pass
     return await call_next(request)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Apply browser-facing security defaults to every API response."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/", tags=["Health"])

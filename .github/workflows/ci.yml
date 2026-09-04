@@ -23,13 +23,14 @@ jobs:
           pip install ruff mypy bandit safety
       
       - name: Lint with ruff
-        run: ruff check backend/app || true
+        run: ruff check --select E9,F63,F7,F82 backend/app
       
       - name: Type check with mypy
-        run: mypy backend/app || true
+        continue-on-error: true
+        run: mypy --explicit-package-bases backend/app
       
       - name: Security check with bandit
-        run: bandit -r backend/app || true
+        run: bandit -q -ll -r backend/app
 
   backend-test:
     runs-on: ubuntu-latest
