@@ -34,6 +34,11 @@ jobs:
 
   backend-test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./cloudconform-ci.db
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: cloudconform-ci-only-secret-key-32-characters
+      DEMO_MODE: "true"
     
     steps:
       - uses: actions/checkout@v4
