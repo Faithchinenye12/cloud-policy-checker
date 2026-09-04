@@ -47,6 +47,36 @@ evidence. Readiness is decision support—not an audit, certification, or
 endorsement by a framework publisher. Closing a workflow item does not raise a
 score until a later scan records passing evidence.
 
+## Product tour
+
+### A product story, not just a feature list
+
+The in-product narrative explains the security problem, the evidence-first
+approach, and the engineering decisions behind the platform.
+
+[![Why CloudConform product story](docs/screenshots/01-why-cloudconform.png)](https://cloudconform-demo.onrender.com)
+
+### Risk intelligence with a visible evidence trail
+
+The intelligence workspace connects a resource to its evaluated policy,
+resulting finding, exposure score, and recommended next action.
+
+[![CloudConform risk intelligence](docs/screenshots/02-risk-intelligence.png)](https://cloudconform-demo.onrender.com)
+
+### Honest, evidence-based compliance readiness
+
+Framework views distinguish passing evidence from gaps across CIS, NIST,
+ISO/IEC 27001, and SOC 2 without presenting the result as certification.
+
+[![CloudConform compliance readiness](docs/screenshots/03-compliance-readiness.png)](https://cloudconform-demo.onrender.com)
+
+### The cloud inventory behind every conclusion
+
+The resource workspace preserves the provider, type, region, status, and last
+discovery context used by deterministic controls.
+
+[![CloudConform cloud resources](docs/screenshots/04-cloud-resources.png)](https://cloudconform-demo.onrender.com)
+
 ## Architecture
 
 ```mermaid
