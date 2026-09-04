@@ -11,10 +11,17 @@ import CompliancePage from "./CompliancePage";
 import {
   Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu, Network,
-  ArrowRight, Eye, Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
+  ArrowLeft, ArrowRight, Eye, HelpCircle, Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
 } from "lucide-react";
 
-type ApiState = "checking" | "online" | "offline";
+type ApiState = "checking" | "online" | "waking";
+
+const tour = [
+  { view: "Resources", eyebrow: "1 · Cloud inventory", title: "Start with the asset", body: "See the cloud resource and configuration evidence that every later decision traces back to." },
+  { view: "Policies", eyebrow: "2 · Deterministic controls", title: "Understand the rule", body: "Review human-readable controls and the exact configuration each policy expects." },
+  { view: "Intelligence", eyebrow: "3 · Connected risk", title: "Prioritise what matters", body: "Follow stored evidence from resource to policy to finding, then see the recommended action." },
+  { view: "Compliance", eyebrow: "4 · Evidence-based assurance", title: "Measure readiness honestly", body: "Translate verified results into framework readiness without claiming an audit or certification." },
+];
 
 const navigation: Array<{ label: string; icon: LucideIcon; active?: boolean }> = [
   { label: "Overview", icon: LayoutDashboard, active: true },
@@ -44,15 +51,27 @@ export default function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [activeView, setActiveView] = useState("Overview");
+  const [tourStep, setTourStep] = useState(0);
+  const [showTour, setShowTour] = useState(() => publicDemo && localStorage.getItem("cloudconform_tour_seen") !== "true");
 
   useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 5000);
-    fetch(`${import.meta.env.VITE_API_URL ?? "/api"}/health`, { signal: controller.signal })
-      .then((response) => { if (!response.ok) throw new Error(); setApiState("online"); })
-      .catch(() => setApiState("offline"))
-      .finally(() => window.clearTimeout(timer));
-    return () => { controller.abort(); window.clearTimeout(timer); };
+    let disposed = false;
+    let retryTimer = 0;
+    let controller: AbortController | null = null;
+    const checkApi = () => {
+      controller = new AbortController();
+      const timeout = window.setTimeout(() => controller?.abort(), 8000);
+      fetch(`${import.meta.env.VITE_API_URL ?? "/api"}/health`, { signal: controller.signal })
+        .then((response) => { if (!response.ok) throw new Error(); if (!disposed) setApiState("online"); })
+        .catch(() => {
+          if (disposed) return;
+          setApiState("waking");
+          retryTimer = window.setTimeout(checkApi, 8000);
+        })
+        .finally(() => window.clearTimeout(timeout));
+    };
+    checkApi();
+    return () => { disposed = true; controller?.abort(); window.clearTimeout(retryTimer); };
   }, []);
 
   useEffect(() => {
@@ -76,6 +95,23 @@ export default function App() {
     setUser(null);
   }
 
+  function openTour() {
+    setTourStep(0);
+    setActiveView(tour[0].view);
+    setShowTour(true);
+  }
+
+  function closeTour() {
+    localStorage.setItem("cloudconform_tour_seen", "true");
+    setShowTour(false);
+  }
+
+  function moveTour(nextStep: number) {
+    if (nextStep >= tour.length) { closeTour(); return; }
+    setTourStep(nextStep);
+    setActiveView(tour[nextStep].view);
+  }
+
   if (!authChecked) return <main className="auth-loading"><BrandMark /><span>Securing your workspace…</span></main>;
   if (!user) return <AuthPage onAuthenticated={authenticated} />;
 
@@ -89,8 +125,8 @@ export default function App() {
     {mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} />}
 
     <main className="main-content">
-      <header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu /></button><div className="search-box"><Search /><input aria-label="Search" placeholder="Search resources, policies, or findings" /></div><div className="topbar-actions"><div className={`api-status ${apiState}`}><span /> API {apiState}</div><button className="icon-button"><Bell /><i /></button></div></header>
-      <div className="page-content">{publicDemo&&<section className="demo-banner"><div><Eye/><span><strong>Read-only recruiter demo</strong> Explore verified sample evidence without changing the shared workspace.</span></div><nav aria-label="Suggested demo journey"><button onClick={()=>setActiveView("Resources")}>1. Resource</button><ArrowRight/><button onClick={()=>setActiveView("Policies")}>2. Controls</button><ArrowRight/><button onClick={()=>setActiveView("Intelligence")}>3. Risk</button><ArrowRight/><button onClick={()=>setActiveView("Compliance")}>4. Readiness</button></nav></section>}{activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} readOnly={publicDemo} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
+      <header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu /></button><div className="search-box"><Search /><input aria-label="Search" placeholder="Search resources, policies, or findings" /></div><div className="topbar-actions"><div className={`api-status ${apiState}`} title={apiState === "online" ? "CloudConform API is ready" : "The demo service is starting and will reconnect automatically"}><span /> {apiState === "online" ? "API Online" : apiState === "checking" ? "Connecting…" : "Service waking up…"}</div><button className="icon-button"><Bell /><i /></button></div></header>
+      <div className="page-content">{publicDemo&&<section className="demo-banner"><div><Eye/><span><strong>Read-only recruiter demo</strong> Explore verified sample evidence without changing the shared workspace.</span><button className="tour-launch" onClick={openTour}><HelpCircle/> Guided tour</button></div><nav aria-label="Suggested demo journey"><button onClick={()=>setActiveView("Resources")}>1. Resource</button><ArrowRight/><button onClick={()=>setActiveView("Policies")}>2. Controls</button><ArrowRight/><button onClick={()=>setActiveView("Intelligence")}>3. Risk</button><ArrowRight/><button onClick={()=>setActiveView("Compliance")}>4. Readiness</button></nav></section>}{activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} readOnly={publicDemo} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
         <section className="page-heading"><div><span className="eyebrow accent">Unified cloud security</span><h1>Security posture overview</h1><p>Monitor policy compliance, cloud resources, and scan activity from one place.</p></div>{!publicDemo&&<button className="primary-button"><Play /> Run new scan</button>}</section>
         <div className="preview-notice"><Activity /><div><strong>Dashboard preview</strong><span>Visual metrics use demonstration data. API connectivity is live.</span></div></div>
         <section className="metrics-grid"><Metric icon={Gauge} label="Compliance score" value="84%" detail="6% improvement" tone="cyan"/><Metric icon={Boxes} label="Cloud resources" value="1,248" detail="Across 3 providers" tone="blue"/><Metric icon={AlertTriangle} label="Open findings" value="12" detail="2 critical findings" tone="orange"/><Metric icon={Radar} label="Scans this month" value="36" detail="34 completed" tone="purple"/></section>
@@ -106,6 +142,7 @@ export default function App() {
         </section></>}
       </div>
     </main>
+    {showTour && <div className="tour-backdrop" role="presentation"><section className="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title"><button className="tour-close" onClick={closeTour} aria-label="Close guided tour"><X/></button><span className="eyebrow accent">{tour[tourStep].eyebrow}</span><h2 id="tour-title">{tour[tourStep].title}</h2><p>{tour[tourStep].body}</p><div className="tour-progress" aria-label={`Step ${tourStep + 1} of ${tour.length}`}>{tour.map((step,index)=><span className={index === tourStep ? "active" : index < tourStep ? "complete" : ""} key={step.view}/>)}</div><footer><small>Step {tourStep + 1} of {tour.length}</small><div>{tourStep > 0 && <button className="tour-secondary" onClick={()=>moveTour(tourStep-1)}><ArrowLeft/> Back</button>}<button className="tour-primary" onClick={()=>moveTour(tourStep+1)}>{tourStep === tour.length-1 ? "Finish tour" : "Next"}<ArrowRight/></button></div></footer></section></div>}
   </div>;
 }
 
