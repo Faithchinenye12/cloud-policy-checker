@@ -43,7 +43,7 @@ def test_preview_agent_is_grounded_in_priority_evidence(monkeypatch):
     assert len(response.tools_used) == 3
 
 
-def test_demo_session_never_invokes_bedrock(monkeypatch):
+def test_demo_session_can_be_forced_to_preview(monkeypatch):
     monkeypatch.setattr(service.settings, "SECURITY_AGENT_MODE", "strands")
     monkeypatch.setattr(
         service,

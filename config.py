@@ -37,12 +37,24 @@ class Settings:
             "BEDROCK_MODEL_ID",
             "global.anthropic.claude-sonnet-4-6",
         )
+        self.SECURITY_AGENT_DEMO_DAILY_LIMIT = int(
+            os.getenv("SECURITY_AGENT_DEMO_DAILY_LIMIT", "3")
+        )
+        self.SECURITY_AGENT_GLOBAL_DAILY_LIMIT = int(
+            os.getenv("SECURITY_AGENT_GLOBAL_DAILY_LIMIT", "30")
+        )
 
         if len(self.JWT_SECRET_KEY) < 32:
             raise ValueError("JWT_SECRET_KEY must contain at least 32 characters.")
 
         if self.SECURITY_AGENT_MODE not in {"preview", "strands"}:
             raise ValueError("SECURITY_AGENT_MODE must be 'preview' or 'strands'.")
+
+        if self.SECURITY_AGENT_DEMO_DAILY_LIMIT < 0:
+            raise ValueError("SECURITY_AGENT_DEMO_DAILY_LIMIT must be non-negative.")
+
+        if self.SECURITY_AGENT_GLOBAL_DAILY_LIMIT < 0:
+            raise ValueError("SECURITY_AGENT_GLOBAL_DAILY_LIMIT must be non-negative.")
 
         # Azure credentials
         self.AZURE_SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID", "")
