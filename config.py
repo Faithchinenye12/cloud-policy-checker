@@ -31,8 +31,18 @@ class Settings:
         self.JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
         self.JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "1"))
 
+        # Grounded, read-only security agent
+        self.SECURITY_AGENT_MODE = os.getenv("SECURITY_AGENT_MODE", "preview").lower()
+        self.BEDROCK_MODEL_ID = os.getenv(
+            "BEDROCK_MODEL_ID",
+            "global.anthropic.claude-sonnet-4-6",
+        )
+
         if len(self.JWT_SECRET_KEY) < 32:
             raise ValueError("JWT_SECRET_KEY must contain at least 32 characters.")
+
+        if self.SECURITY_AGENT_MODE not in {"preview", "strands"}:
+            raise ValueError("SECURITY_AGENT_MODE must be 'preview' or 'strands'.")
 
         # Azure credentials
         self.AZURE_SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID", "")

@@ -6,6 +6,9 @@
 flowchart TB
     User[Browser] -->|Static application| Frontend[React / Nginx]
     Frontend -->|JWT API requests| API[FastAPI]
+    API --> SecurityAgent[Strands Security Agent]
+    SecurityAgent -->|Model inference| Bedrock[Amazon Bedrock]
+    SecurityAgent -->|Read-only evidence tools| Postgres
     API --> Postgres[(PostgreSQL)]
     API -->|Publish scan job| Redis[(Redis)]
     Redis --> Worker[Celery worker]
@@ -66,6 +69,21 @@ the priority action queue. Accepted risk requires a written justification.
 - The API is the only application component that serves browser requests.
 - Risk and readiness views derive from persisted scan results, preserving one
   evidence source of truth.
+- The Strands agent receives read-only evidence tools and cannot execute
+  remediation or mutate cloud infrastructure.
+
+## Security Agent boundary
+
+The CloudConform Security Agent adds natural-language investigation without
+replacing deterministic controls. Its three tools expose the posture summary,
+ordered findings, and traceability nodes from persisted evidence. Amazon
+Bedrock is used only to reason over and explain that evidence. The system prompt
+requires explicit uncertainty, prohibits invented results, and distinguishes
+readiness guidance from audits or certifications.
+
+Public demo sessions always use the deterministic evidence-preview path to
+avoid unbounded inference cost. Private deployments can enable the Strands +
+Bedrock path with `SECURITY_AGENT_MODE=strands` and a least-privilege AWS role.
 
 ## Public demo boundary
 

@@ -84,6 +84,20 @@ def test_demo_session_rejects_mutations(client, method, path):
     assert response.headers["x-frame-options"] == "DENY"
 
 
+def test_demo_session_can_use_read_only_security_agent(client):
+    test_client, _ = client
+    token = demo_session(test_client)
+
+    response = test_client.post(
+        "/security-agent/analyze",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "What should the security team investigate first?"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["mode"] == "evidence_preview"
+
+
 def test_invalid_and_expired_tokens_are_rejected(client):
     test_client, session_factory = client
     database = session_factory()

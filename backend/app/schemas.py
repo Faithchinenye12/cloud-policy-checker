@@ -256,6 +256,26 @@ class IntelligenceGraph(BaseModel):
     priority_actions: list[IntelligenceAction]
 
 
+class SecurityAgentRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+
+
+class SecurityAgentEvidence(BaseModel):
+    resources: int
+    policies: int
+    scans: int
+    open_findings: int
+    risk_score: int = Field(ge=0, le=100)
+
+
+class SecurityAgentResponse(BaseModel):
+    answer: str
+    mode: Literal["evidence_preview", "strands_bedrock"]
+    evidence: SecurityAgentEvidence
+    tools_used: list[str]
+    disclaimer: str
+
+
 class ControlGap(BaseModel):
     finding_id: int
     resource_name: str

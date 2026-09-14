@@ -37,6 +37,7 @@ back to the resource, policy, scan, and stored result that produced it.
 - PostgreSQL-backed evidence from asynchronous Celery scans
 - Finding ownership, deadlines, status, notes, and immutable transition history
 - Deterministic risk prioritisation and resource-to-finding traceability
+- Grounded CloudConform Security Agent built with the Strands Agents SDK and Amazon Bedrock
 - Guided remediation followed by verification scanning
 - Evidence-based CIS, NIST, ISO 27001, and SOC 2 readiness views
 - CSV reporting and an intentionally read-only public demonstration
@@ -82,6 +83,9 @@ discovery context used by deterministic controls.
 ```mermaid
 flowchart LR
     Browser[React recruiter workspace] -->|JWT + HTTPS| API[FastAPI API]
+    API --> Agent[Strands Security Agent]
+    Agent -->|Reasoning| Bedrock[Amazon Bedrock]
+    Agent -->|Read-only tools| DB
     API --> DB[(PostgreSQL evidence store)]
     API -->|Queue scan| Redis[(Redis)]
     Redis --> Worker[Celery worker]
@@ -107,8 +111,9 @@ A useful five-minute review path is:
 1. Open the [live demo](https://cloudconform-demo.onrender.com).
 2. Choose **Guided tour** to follow the evidence journey.
 3. Open **Intelligence** to inspect the traceability map and priority queue.
-4. Open **Compliance** to compare passing evidence with unresolved gaps.
-5. Open **Why CloudConform** for the product rationale and engineering story.
+4. Ask the **Security Agent** to explain the highest-priority risk.
+5. Open **Compliance** to compare passing evidence with unresolved gaps.
+6. Open **Why CloudConform** for the product rationale and engineering story.
 
 The public workspace contains sample evidence and blocks mutation controls. The
 source repository also contains the full authenticated application and its real
@@ -148,6 +153,19 @@ and deterministic. Enable only the provider configured privately:
 Prefer IAM roles, workload identity, managed identity, or another short-lived
 credential source supported by the provider SDK. Never commit `.env`, client
 secrets, service-account keys, access tokens, or credential files.
+
+## CloudConform Security Agent
+
+The Security Agent uses Strands tools to inspect the deterministic posture,
+priority findings, and traceability graph before Amazon Bedrock prepares an
+operator-friendly explanation. The tools are read-only: the model cannot alter
+resources, findings, policies, or cloud infrastructure.
+
+The public recruiter environment uses `SECURITY_AGENT_MODE=preview`, which
+returns a grounded deterministic demonstration without creating open-ended
+model cost. To exercise the full Strands + Bedrock path in a private environment,
+set `SECURITY_AGENT_MODE=strands`, choose `BEDROCK_MODEL_ID`, and provide a
+least-privilege AWS identity with access only to the selected Bedrock model.
 
 ## Quality checks
 

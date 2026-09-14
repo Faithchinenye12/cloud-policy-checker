@@ -16,3 +16,4 @@ boto3>=1.35,<2
 azure-identity>=1.19,<2
 azure-mgmt-storage>=22,<25
 google-cloud-storage>=3,<4
+strands-agents>=1,<2

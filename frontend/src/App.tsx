@@ -9,8 +9,9 @@ import BrandMark from "./BrandMark";
 import IntelligencePage from "./IntelligencePage";
 import CompliancePage from "./CompliancePage";
 import WhyCloudConformPage from "./WhyCloudConformPage";
+import SecurityAgentPage from "./SecurityAgentPage";
 import {
-  Activity, AlertTriangle, Bell, Boxes, CheckCircle2, ChevronDown,
+  Activity, AlertTriangle, Bell, Bot, Boxes, CheckCircle2, ChevronDown,
   CircleUserRound, Cloud, FileBarChart, Gauge, LayoutDashboard, Menu, Network,
   ArrowLeft, ArrowRight, Eye, HelpCircle, Play, Radar, ScrollText, Search, Settings, ShieldCheck, Siren, X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const tour = [
   { view: "Policies", eyebrow: "2 · Deterministic controls", title: "Understand the rule", body: "Review human-readable controls and the exact configuration each policy expects." },
   { view: "Intelligence", eyebrow: "3 · Connected risk", title: "Prioritise what matters", body: "Follow stored evidence from resource to policy to finding, then see the recommended action." },
   { view: "Compliance", eyebrow: "4 · Evidence-based assurance", title: "Measure readiness honestly", body: "Translate verified results into framework readiness without claiming an audit or certification." },
+  { view: "Security Agent", eyebrow: "5 · Grounded AI investigation", title: "Ask the Security Agent", body: "Use a Strands-powered, read-only agent to explain verified evidence and recommend the safest next action." },
 ];
 
 const navigation: Array<{ label: string; icon: LucideIcon; active?: boolean }> = [
@@ -29,6 +31,7 @@ const navigation: Array<{ label: string; icon: LucideIcon; active?: boolean }> =
   { label: "Resources", icon: Boxes }, { label: "Policies", icon: ScrollText },
   { label: "Scans", icon: Radar }, { label: "Findings", icon: Siren },
   { label: "Intelligence", icon: Network },
+  { label: "Security Agent", icon: Bot },
   { label: "Compliance", icon: ShieldCheck },
   { label: "Reports", icon: FileBarChart },
 ];
@@ -131,7 +134,7 @@ export default function App() {
 
     <main className="main-content">
       <header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu /></button><div className="search-box"><Search /><input aria-label="Search" placeholder="Search resources, policies, or findings" /></div><div className="topbar-actions"><div className={`api-status ${apiState}`} title={apiState === "online" ? "CloudConform API is ready" : "The demo service is starting and will reconnect automatically"}><span /> {apiState === "online" ? "API Online" : apiState === "checking" ? "Connecting…" : "Service waking up…"}</div><button className="icon-button"><Bell /><i /></button></div></header>
-      <div className="page-content">{publicDemo&&<section className="demo-banner"><div><Eye/><span><strong>Read-only recruiter demo</strong> Explore verified sample evidence without changing the shared workspace.</span><button className="tour-launch" onClick={openTour}><HelpCircle/> Guided tour</button></div><nav aria-label="Suggested demo journey"><button onClick={()=>setActiveView("Resources")}>1. Resource</button><ArrowRight/><button onClick={()=>setActiveView("Policies")}>2. Controls</button><ArrowRight/><button onClick={()=>setActiveView("Intelligence")}>3. Risk</button><ArrowRight/><button onClick={()=>setActiveView("Compliance")}>4. Readiness</button></nav></section>}{activeView === "Why CloudConform" ? <WhyCloudConformPage onExplore={openTour} /> : activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} readOnly={publicDemo} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
+      <div className="page-content">{publicDemo&&<section className="demo-banner"><div><Eye/><span><strong>Read-only recruiter demo</strong> Explore verified sample evidence without changing the shared workspace.</span><button className="tour-launch" onClick={openTour}><HelpCircle/> Guided tour</button></div><nav aria-label="Suggested demo journey"><button onClick={()=>setActiveView("Resources")}>1. Resource</button><ArrowRight/><button onClick={()=>setActiveView("Policies")}>2. Controls</button><ArrowRight/><button onClick={()=>setActiveView("Intelligence")}>3. Risk</button><ArrowRight/><button onClick={()=>setActiveView("Compliance")}>4. Readiness</button></nav></section>}{activeView === "Why CloudConform" ? <WhyCloudConformPage onExplore={openTour} /> : activeView === "Resources" ? <ResourcesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Policies" ? <PoliciesPage token={localStorage.getItem("cpc_access_token") ?? ""} readOnly={publicDemo} /> : activeView === "Scans" || activeView === "Findings" ? <ScansPage token={localStorage.getItem("cpc_access_token") ?? ""} currentUserId={user.id} initialTab={activeView === "Findings" ? "findings" : "scans"} readOnly={publicDemo} /> : activeView === "Intelligence" ? <IntelligencePage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Security Agent" ? <SecurityAgentPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : activeView === "Compliance" ? <CompliancePage token={localStorage.getItem("cpc_access_token") ?? ""} onManageFindings={()=>setActiveView("Findings")} /> : activeView === "Reports" ? <ReportsPage token={localStorage.getItem("cpc_access_token") ?? ""} /> : <>
         <section className="page-heading"><div><span className="eyebrow accent">Unified cloud security</span><h1>Security posture overview</h1><p>Monitor policy compliance, cloud resources, and scan activity from one place.</p></div>{!publicDemo&&<button className="primary-button"><Play /> Run new scan</button>}</section>
         <div className="preview-notice"><Activity /><div><strong>Dashboard preview</strong><span>Visual metrics use demonstration data. API connectivity is live.</span></div></div>
         <section className="metrics-grid"><Metric icon={Gauge} label="Compliance score" value="84%" detail="6% improvement" tone="cyan"/><Metric icon={Boxes} label="Cloud resources" value="1,248" detail="Across 3 providers" tone="blue"/><Metric icon={AlertTriangle} label="Open findings" value="12" detail="2 critical findings" tone="orange"/><Metric icon={Radar} label="Scans this month" value="36" detail="34 completed" tone="purple"/></section>

@@ -17,6 +17,10 @@ services:
         value: "true"
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: SECURITY_AGENT_MODE
+        value: "preview"
+      - key: BEDROCK_MODEL_ID
+        value: global.anthropic.claude-sonnet-4-6
   - type: worker
     name: cloudconform-worker
     runtime: docker

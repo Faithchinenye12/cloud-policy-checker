@@ -10,6 +10,7 @@ from backend.app.resources.router import router as resource_router
 from backend.app.remediations.router import router as remediation_router
 from backend.app.compliance.router import router as compliance_router
 from backend.app.scans.router import router as scan_router
+from backend.app.security_agent.router import router as security_agent_router
 from config import settings
 
 
@@ -41,6 +42,9 @@ async def protect_demo_data(request: Request, call_next):
 
             try:
                 if decode_access_token(authorization[7:]).get("demo"):
+                    request.state.demo_session = True
+                    if request.url.path == "/security-agent/analyze":
+                        return await call_next(request)
                     return JSONResponse(
                         status_code=403,
                         content={"detail": "The public demo is read-only."},
@@ -87,3 +91,4 @@ app.include_router(scan_router)
 app.include_router(intelligence_router)
 app.include_router(remediation_router)
 app.include_router(compliance_router)
+app.include_router(security_agent_router)
