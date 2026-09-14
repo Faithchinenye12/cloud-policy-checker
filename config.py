@@ -35,7 +35,7 @@ class Settings:
         self.SECURITY_AGENT_MODE = os.getenv("SECURITY_AGENT_MODE", "preview").lower()
         self.BEDROCK_MODEL_ID = os.getenv(
             "BEDROCK_MODEL_ID",
-            "global.anthropic.claude-sonnet-4-6",
+            "us.amazon.nova-pro-v1:0",
         )
         self.SECURITY_AGENT_DEMO_DAILY_LIMIT = int(
             os.getenv("SECURITY_AGENT_DEMO_DAILY_LIMIT", "3")

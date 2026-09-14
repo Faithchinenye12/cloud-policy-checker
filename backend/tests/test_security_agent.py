@@ -71,3 +71,12 @@ def test_strands_mode_returns_model_answer(monkeypatch):
     )
     assert response.mode == "strands_bedrock"
     assert response.answer == "Grounded answer for 25"
+
+
+def test_public_answer_removes_provider_reasoning_markup():
+    answer = service._public_answer(
+        "<thinking>private model reasoning</thinking>\n\n"
+        "Assessment: review the verified finding."
+    )
+    assert answer == "Assessment: review the verified finding."
+    assert "thinking" not in answer

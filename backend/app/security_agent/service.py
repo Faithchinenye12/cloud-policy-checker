@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 from backend.app import schemas
@@ -60,8 +61,19 @@ def _result_text(result: Any) -> str:
             if isinstance(block, dict) and isinstance(block.get("text"), str)
         )
         if text:
-            return text
-    return str(result)
+            return _public_answer(text)
+    return _public_answer(str(result))
+
+
+def _public_answer(text: str) -> str:
+    """Remove provider reasoning markup before returning an advisory answer."""
+    cleaned = re.sub(
+        r"<thinking>.*?</thinking>",
+        "",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return cleaned.strip()
 
 
 def _invoke_strands(question: str, evidence: dict[str, Any]) -> str:

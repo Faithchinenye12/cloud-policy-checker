@@ -20,7 +20,7 @@ services:
       - key: SECURITY_AGENT_MODE
         value: "preview"
       - key: BEDROCK_MODEL_ID
-        value: global.anthropic.claude-sonnet-4-6
+        value: us.amazon.nova-pro-v1:0
       - key: SECURITY_AGENT_DEMO_DAILY_LIMIT
         value: "3"
       - key: SECURITY_AGENT_GLOBAL_DAILY_LIMIT
