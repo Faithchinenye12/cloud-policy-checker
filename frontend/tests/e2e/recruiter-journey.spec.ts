@@ -38,6 +38,10 @@ test("a recruiter can complete the guided evidence journey", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Measure readiness honestly" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Compliance readiness" })).toBeVisible();
 
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("heading", { name: "Ask the Security Agent" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CloudConform Security Agent" })).toBeVisible();
+
   await page.getByRole("button", { name: "Finish tour" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
 
